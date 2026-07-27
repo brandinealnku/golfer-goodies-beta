@@ -505,5 +505,165 @@
     "inventory": 21,
     "options": [],
     "image": "product-5"
+  },
+  {
+    "id": "p31",
+    "courseId": "c4",
+    "name": "Heritage Turkey Club",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Sandwiches and wraps",
+    "price": 14,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "Made to order"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-2"
+  },
+  {
+    "id": "p32",
+    "courseId": "c4",
+    "name": "Oak Trail Mix",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Quick Snacks",
+    "price": 6,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Ready now"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-3"
+  },
+  {
+    "id": "p33",
+    "courseId": "c4",
+    "name": "Club Logo Towel",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Golf Essentials",
+    "price": 20,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Course favorite"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-4"
+  },
+  {
+    "id": "p34",
+    "courseId": "c4",
+    "name": "Caddie Strategy Session",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Course Experiences",
+    "price": 35,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Limited quantity"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-1"
+  },
+  {
+    "id": "p35",
+    "courseId": "c4",
+    "name": "Sparkling Citrus Water",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Cold Drinks",
+    "price": 5,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Ready now"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-2"
+  },
+  {
+    "id": "p36",
+    "courseId": "c5",
+    "name": "Mesa Breakfast Burrito",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Breakfast",
+    "price": 8,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "Made to order"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-3"
+  },
+  {
+    "id": "p37",
+    "courseId": "c5",
+    "name": "Frozen Lemonade",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Cold Drinks",
+    "price": 4,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Ready now"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-4"
+  },
+  {
+    "id": "p38",
+    "courseId": "c5",
+    "name": "Desert Sun Sleeve",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Weather Rescue",
+    "price": 12,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Weather essential"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-1"
+  },
+  {
+    "id": "p39",
+    "courseId": "c5",
+    "name": "Creekside Hot Dog",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "At the Turn",
+    "price": 6,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Course favorite"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-2"
+  },
+  {
+    "id": "p40",
+    "courseId": "c5",
+    "name": "Recycled Golf Balls",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Golf Essentials",
+    "price": 10,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Ready now"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-3"
   }
 ]
