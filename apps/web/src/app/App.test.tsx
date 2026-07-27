@@ -27,7 +27,7 @@ it('selects a course, scopes products, blocks ordering, and changes navigation',
   expect(await screen.findByText('Clubhouse Sandwich')).toBeInTheDocument();
   expect(screen.queryByText('Trail Mix Cup')).not.toBeInTheDocument();
   expect(
-    screen.getByRole('complementary', { name: 'Course context' }),
+    await screen.findByRole('complementary', { name: 'Course context' }),
   ).toHaveTextContent('Browsing · Summit Pines Resort');
   expect(
     screen.getByRole('navigation', { name: 'Golfer navigation' }),
@@ -50,12 +50,15 @@ it.each<[string, VerificationMethod]>([
     await user.type(screen.getByLabelText('Demo course code'), 'BIRDIE7');
   await user.click(screen.getByRole('button', { name: button }));
   expect(
-    screen.getByRole('complementary', { name: 'Course context' }),
+    await screen.findByRole('complementary', { name: 'Course context' }),
   ).toHaveTextContent('Active Round · Summit Pines Resort');
-  expect(
-    JSON.parse(localStorage.getItem('golfer-goodies.course-context.v1')!)
-      .activeRound,
-  ).toMatchObject({ courseId: 'summit-pines', verificationMethod: method });
+  await waitFor(() => {
+    expect(
+      JSON.parse(
+        localStorage.getItem('golfer-goodies.course-context.v1') ?? '{}',
+      ).activeRound,
+    ).toMatchObject({ courseId: 'summit-pines', verificationMethod: method });
+  });
   expect(
     screen.getAllByRole('button', {
       name: 'Ordering planned — not yet available',
@@ -63,18 +66,32 @@ it.each<[string, VerificationMethod]>([
   ).toBeDisabled();
 });
 it('rejects invalid demo code and announces status without geolocation', async () => {
+  const originalGeolocation = Object.getOwnPropertyDescriptor(
+    navigator,
+    'geolocation',
+  );
   const getCurrentPosition = vi.fn();
   Object.defineProperty(navigator, 'geolocation', {
     configurable: true,
-    value: { getCurrentPosition },
+    value: {
+      getCurrentPosition,
+      watchPosition: vi.fn(),
+      clearWatch: vi.fn(),
+    },
   });
-  const user = userEvent.setup();
-  route('#/course/summit-pines');
-  await screen.findByText('Clubhouse Sandwich');
-  await user.type(screen.getByLabelText('Demo course code'), 'WRONG');
-  await user.click(screen.getByRole('button', { name: 'Verify demo code' }));
-  expect(screen.getByText(/code invalid/i)).toBeInTheDocument();
-  expect(getCurrentPosition).not.toHaveBeenCalled();
+  try {
+    const user = userEvent.setup();
+    route('#/course/summit-pines');
+    await screen.findByText('Clubhouse Sandwich');
+    await user.type(screen.getByLabelText('Demo course code'), 'WRONG');
+    await user.click(screen.getByRole('button', { name: 'Verify demo code' }));
+    expect(screen.getByText(/code invalid/i)).toBeInTheDocument();
+    expect(getCurrentPosition).not.toHaveBeenCalled();
+  } finally {
+    if (originalGeolocation)
+      Object.defineProperty(navigator, 'geolocation', originalGeolocation);
+    else Reflect.deleteProperty(navigator, 'geolocation');
+  }
 });
 it('rejects an invalid demo QR and associates the error with its field', async () => {
   const user = userEvent.setup();
@@ -103,7 +120,7 @@ it('changing course replaces product and Active Round context', async () => {
   );
   expect(screen.queryByText('Clubhouse Sandwich')).not.toBeInTheDocument();
   expect(
-    screen.getByRole('complementary', { name: 'Course context' }),
+    await screen.findByRole('complementary', { name: 'Course context' }),
   ).toHaveTextContent('Browse only');
 });
 

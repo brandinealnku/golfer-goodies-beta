@@ -1,10 +1,19 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { dirname, resolve, sep } from 'node:path';
 import test from 'node:test';
-import { URL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
-const source = (path) =>
-  readFile(new URL(`../src/${path}`, import.meta.url), 'utf8');
+const testDirectory = dirname(fileURLToPath(import.meta.url));
+const sourceDirectory = resolve(testDirectory, '../src');
+const source = (relativePath) => {
+  const sourcePath = resolve(sourceDirectory, relativePath);
+  assert.ok(
+    sourcePath.startsWith(`${sourceDirectory}${sep}`),
+    `Source path must remain inside ${sourceDirectory}`,
+  );
+  return readFile(sourcePath, 'utf8');
+};
 
 test('golfer UI has no marketplace-wide product API or raw product import', async () => {
   const [repository, coursePage, discovery] = await Promise.all([
