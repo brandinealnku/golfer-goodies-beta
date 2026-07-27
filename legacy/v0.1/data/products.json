@@ -1,0 +1,669 @@
+[
+  {
+    "id": "p101",
+    "courseId": "c1",
+    "name": "Sunrise Breakfast Wrap",
+    "description": "Freshly prepared for the next nine.",
+    "category": "Breakfast",
+    "price": 5.5,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "vegetarian"
+    ],
+    "inventory": 12,
+    "options": [],
+    "image": "product-1"
+  },
+  {
+    "id": "p102",
+    "courseId": "c1",
+    "name": "Caddie Club Sandwich",
+    "description": "Freshly prepared for the next nine.",
+    "category": "Sandwiches and wraps",
+    "price": 7.85,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 13,
+    "options": [],
+    "image": "product-2"
+  },
+  {
+    "id": "p103",
+    "courseId": "c1",
+    "name": "Trail Mix Parfait",
+    "description": "Freshly prepared for the next nine.",
+    "category": "Snacks",
+    "price": 10.2,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "vegetarian"
+    ],
+    "inventory": 14,
+    "options": [],
+    "image": "product-3"
+  },
+  {
+    "id": "p104",
+    "courseId": "c1",
+    "name": "Citrus Sparkler",
+    "description": "Freshly prepared for the next nine.",
+    "category": "Nonalcoholic beverages",
+    "price": 12.55,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 15,
+    "options": [],
+    "image": "product-4"
+  },
+  {
+    "id": "p105",
+    "courseId": "c1",
+    "name": "Tour Soft Ball Sleeve",
+    "description": "Freshly prepared for the next nine.",
+    "category": "Golf balls",
+    "price": 14.9,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 16,
+    "options": [
+      "Standard",
+      "Premium"
+    ],
+    "image": "product-5"
+  },
+  {
+    "id": "p106",
+    "courseId": "c1",
+    "name": "All-Weather Glove",
+    "description": "Freshly prepared for the next nine.",
+    "category": "Gloves",
+    "price": 17.25,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 17,
+    "options": [
+      "Standard",
+      "Premium"
+    ],
+    "image": "product-1"
+  },
+  {
+    "id": "p107",
+    "courseId": "c1",
+    "name": "Course Crest Cap",
+    "description": "Freshly prepared for the next nine.",
+    "category": "Apparel",
+    "price": 19.6,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-2"
+  },
+  {
+    "id": "p108",
+    "courseId": "c1",
+    "name": "Packable Rain Shell",
+    "description": "Freshly prepared for the next nine.",
+    "category": "Weather essentials",
+    "price": 21.95,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 19,
+    "options": [
+      "Standard",
+      "Premium"
+    ],
+    "image": "product-3"
+  },
+  {
+    "id": "p109",
+    "courseId": "c1",
+    "name": "Sun Care Kit",
+    "description": "Freshly prepared for the next nine.",
+    "category": "Personal-care essentials",
+    "price": 24.3,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 20,
+    "options": [],
+    "image": "product-4"
+  },
+  {
+    "id": "p110",
+    "courseId": "c1",
+    "name": "Digital Swing Review",
+    "description": "Freshly prepared for the next nine.",
+    "category": "Course services",
+    "price": 26.65,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 21,
+    "options": [],
+    "image": "product-5"
+  },
+  {
+    "id": "p201",
+    "courseId": "c2",
+    "name": "Sunrise Breakfast Wrap Classic",
+    "description": "A course-ready favorite.",
+    "category": "Breakfast",
+    "price": 6.25,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "vegetarian"
+    ],
+    "inventory": 12,
+    "options": [],
+    "image": "product-1"
+  },
+  {
+    "id": "p202",
+    "courseId": "c2",
+    "name": "Caddie Club Sandwich Classic",
+    "description": "A course-ready favorite.",
+    "category": "Sandwiches and wraps",
+    "price": 8.6,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 13,
+    "options": [],
+    "image": "product-2"
+  },
+  {
+    "id": "p203",
+    "courseId": "c2",
+    "name": "Trail Mix Parfait Classic",
+    "description": "A course-ready favorite.",
+    "category": "Snacks",
+    "price": 10.95,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "vegetarian"
+    ],
+    "inventory": 14,
+    "options": [],
+    "image": "product-3"
+  },
+  {
+    "id": "p204",
+    "courseId": "c2",
+    "name": "Citrus Sparkler Classic",
+    "description": "A course-ready favorite.",
+    "category": "Nonalcoholic beverages",
+    "price": 13.3,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 15,
+    "options": [],
+    "image": "product-4"
+  },
+  {
+    "id": "p205",
+    "courseId": "c2",
+    "name": "Tour Soft Ball Sleeve Classic",
+    "description": "A course-ready favorite.",
+    "category": "Golf balls",
+    "price": 15.65,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 16,
+    "options": [
+      "Standard",
+      "Premium"
+    ],
+    "image": "product-5"
+  },
+  {
+    "id": "p206",
+    "courseId": "c2",
+    "name": "All-Weather Glove Classic",
+    "description": "A course-ready favorite.",
+    "category": "Gloves",
+    "price": 18.0,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 17,
+    "options": [
+      "Standard",
+      "Premium"
+    ],
+    "image": "product-1"
+  },
+  {
+    "id": "p207",
+    "courseId": "c2",
+    "name": "Course Crest Cap Classic",
+    "description": "A course-ready favorite.",
+    "category": "Apparel",
+    "price": 20.35,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-2"
+  },
+  {
+    "id": "p208",
+    "courseId": "c2",
+    "name": "Packable Rain Shell Classic",
+    "description": "A course-ready favorite.",
+    "category": "Weather essentials",
+    "price": 22.7,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 19,
+    "options": [
+      "Standard",
+      "Premium"
+    ],
+    "image": "product-3"
+  },
+  {
+    "id": "p209",
+    "courseId": "c2",
+    "name": "Sun Care Kit Classic",
+    "description": "A course-ready favorite.",
+    "category": "Personal-care essentials",
+    "price": 25.05,
+    "available": false,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 20,
+    "options": [],
+    "image": "product-4"
+  },
+  {
+    "id": "p210",
+    "courseId": "c2",
+    "name": "Digital Swing Review Classic",
+    "description": "A course-ready favorite.",
+    "category": "Course services",
+    "price": 27.4,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 21,
+    "options": [],
+    "image": "product-5"
+  },
+  {
+    "id": "p301",
+    "courseId": "c3",
+    "name": "Sunrise Breakfast Wrap Lab",
+    "description": "Smart essentials for better play.",
+    "category": "Breakfast",
+    "price": 7.0,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "vegetarian"
+    ],
+    "inventory": 12,
+    "options": [],
+    "image": "product-1"
+  },
+  {
+    "id": "p302",
+    "courseId": "c3",
+    "name": "Caddie Club Sandwich Lab",
+    "description": "Smart essentials for better play.",
+    "category": "Sandwiches and wraps",
+    "price": 9.35,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 13,
+    "options": [],
+    "image": "product-2"
+  },
+  {
+    "id": "p303",
+    "courseId": "c3",
+    "name": "Trail Mix Parfait Lab",
+    "description": "Smart essentials for better play.",
+    "category": "Snacks",
+    "price": 11.7,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "vegetarian"
+    ],
+    "inventory": 14,
+    "options": [],
+    "image": "product-3"
+  },
+  {
+    "id": "p304",
+    "courseId": "c3",
+    "name": "Citrus Sparkler Lab",
+    "description": "Smart essentials for better play.",
+    "category": "Nonalcoholic beverages",
+    "price": 14.05,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 15,
+    "options": [],
+    "image": "product-4"
+  },
+  {
+    "id": "p305",
+    "courseId": "c3",
+    "name": "Tour Soft Ball Sleeve Lab",
+    "description": "Smart essentials for better play.",
+    "category": "Golf balls",
+    "price": 16.4,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 16,
+    "options": [
+      "Standard",
+      "Premium"
+    ],
+    "image": "product-5"
+  },
+  {
+    "id": "p306",
+    "courseId": "c3",
+    "name": "All-Weather Glove Lab",
+    "description": "Smart essentials for better play.",
+    "category": "Gloves",
+    "price": 18.75,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 17,
+    "options": [
+      "Standard",
+      "Premium"
+    ],
+    "image": "product-1"
+  },
+  {
+    "id": "p307",
+    "courseId": "c3",
+    "name": "Course Crest Cap Lab",
+    "description": "Smart essentials for better play.",
+    "category": "Apparel",
+    "price": 21.1,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-2"
+  },
+  {
+    "id": "p308",
+    "courseId": "c3",
+    "name": "Packable Rain Shell Lab",
+    "description": "Smart essentials for better play.",
+    "category": "Weather essentials",
+    "price": 23.45,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 19,
+    "options": [
+      "Standard",
+      "Premium"
+    ],
+    "image": "product-3"
+  },
+  {
+    "id": "p309",
+    "courseId": "c3",
+    "name": "Sun Care Kit Lab",
+    "description": "Smart essentials for better play.",
+    "category": "Personal-care essentials",
+    "price": 25.8,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 20,
+    "options": [],
+    "image": "product-4"
+  },
+  {
+    "id": "p310",
+    "courseId": "c3",
+    "name": "Digital Swing Review Lab",
+    "description": "Smart essentials for better play.",
+    "category": "Course services",
+    "price": 28.15,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "course essential"
+    ],
+    "inventory": 21,
+    "options": [],
+    "image": "product-5"
+  },
+  {
+    "id": "p31",
+    "courseId": "c4",
+    "name": "Heritage Turkey Club",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Sandwiches and wraps",
+    "price": 14,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "Made to order"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-2"
+  },
+  {
+    "id": "p32",
+    "courseId": "c4",
+    "name": "Oak Trail Mix",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Quick Snacks",
+    "price": 6,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Ready now"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-3"
+  },
+  {
+    "id": "p33",
+    "courseId": "c4",
+    "name": "Club Logo Towel",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Golf Essentials",
+    "price": 20,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Course favorite"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-4"
+  },
+  {
+    "id": "p34",
+    "courseId": "c4",
+    "name": "Caddie Strategy Session",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Course Experiences",
+    "price": 35,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Limited quantity"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-1"
+  },
+  {
+    "id": "p35",
+    "courseId": "c4",
+    "name": "Sparkling Citrus Water",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Cold Drinks",
+    "price": 5,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Ready now"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-2"
+  },
+  {
+    "id": "p36",
+    "courseId": "c5",
+    "name": "Mesa Breakfast Burrito",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Breakfast",
+    "price": 8,
+    "available": true,
+    "featured": true,
+    "tags": [
+      "Made to order"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-3"
+  },
+  {
+    "id": "p37",
+    "courseId": "c5",
+    "name": "Frozen Lemonade",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Cold Drinks",
+    "price": 4,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Ready now"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-4"
+  },
+  {
+    "id": "p38",
+    "courseId": "c5",
+    "name": "Desert Sun Sleeve",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Weather Rescue",
+    "price": 12,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Weather essential"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-1"
+  },
+  {
+    "id": "p39",
+    "courseId": "c5",
+    "name": "Creekside Hot Dog",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "At the Turn",
+    "price": 6,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Course favorite"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-2"
+  },
+  {
+    "id": "p40",
+    "courseId": "c5",
+    "name": "Recycled Golf Balls",
+    "description": "A fictional course offering for marketplace demonstration.",
+    "category": "Golf Essentials",
+    "price": 10,
+    "available": true,
+    "featured": false,
+    "tags": [
+      "Ready now"
+    ],
+    "inventory": 18,
+    "options": [],
+    "image": "product-3"
+  }
+]

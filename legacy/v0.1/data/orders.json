@@ -1,0 +1,32 @@
+[
+  {
+    "id": "o1001",
+    "number": "GG-10482",
+    "courseId": "c1",
+    "userId": "u1",
+    "createdAt": "2026-07-27T14:10:00Z",
+    "items": [
+      {
+        "productId": "p101",
+        "name": "Sunrise Breakfast Wrap",
+        "price": 5.5,
+        "quantity": 2,
+        "options": "Standard",
+        "instructions": "Cut in half"
+      }
+    ],
+    "fulfillment": "Deliver to my hole",
+    "location": "Hole 7",
+    "subtotal": 11,
+    "serviceFee": 1.1,
+    "deliveryFee": 3,
+    "tax": 0.91,
+    "tip": 2,
+    "total": 18.01,
+    "status": "Preparing",
+    "estimated": "18 min",
+    "runner": "Jordan",
+    "staffNote": "Leaving kitchen shortly",
+    "internalNote": ""
+  }
+]
