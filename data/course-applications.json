@@ -1,0 +1,18 @@
+[
+  {
+    "id": "a1",
+    "courseName": "Harbor Dunes Collective",
+    "city": "Port Azure",
+    "state": "CA",
+    "status": "Under review",
+    "progress": 72
+  },
+  {
+    "id": "a2",
+    "courseName": "Copper Oak Golf Park",
+    "city": "Mesa Springs",
+    "state": "AZ",
+    "status": "Submitted",
+    "progress": 45
+  }
+]
