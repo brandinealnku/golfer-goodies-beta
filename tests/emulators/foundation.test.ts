@@ -7,6 +7,8 @@ import {
   getDoc,
   getDocs,
   getFirestore,
+  query,
+  where,
 } from "firebase/firestore";
 import {
   connectFunctionsEmulator,
@@ -34,17 +36,26 @@ describe("local emulator foundation", () => {
     expect(auth.config.emulator?.url).toContain("9099");
     expect(storage.app.options.projectId).toBe("golfer-goodies-local");
   });
-  it("loads deterministic seed status and marketplace", async () => {
-    expect((await getDoc(doc(db, "system/seedStatus"))).data()?.courses).toBe(
-      5,
+  it("loads deterministic public marketplace", async () => {
+    const publicCourses = query(
+      collection(db, "courses"),
+      where("status", "==", "active"),
+      where("marketplaceVisible", "==", true),
     );
-    expect((await getDocs(collection(db, "courses"))).size).toBe(5);
-    expect(
-      (await getDocs(collection(db, "courses/summit-pines/products"))).size,
-    ).toBe(8);
+
+    const activeProducts = query(
+      collection(db, "courses/summit-pines/products"),
+      where("status", "==", "active"),
+    );
+
+    expect((await getDocs(publicCourses)).size).toBe(4);
+    expect((await getDocs(activeProducts)).size).toBe(8);
   });
-  it("handles a missing course", async () =>
-    expect((await getDoc(doc(db, "courses/missing"))).exists()).toBe(false));
+  it("denies access to a missing non-public course", async () => {
+    await expect(getDoc(doc(db, "courses/missing"))).rejects.toMatchObject({
+      code: "permission-denied",
+    });
+  });
   it("calls safe health function", async () =>
     expect(
       (await httpsCallable(functions, "healthCheck")()).data,

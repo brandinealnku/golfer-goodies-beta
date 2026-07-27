@@ -25,7 +25,7 @@
     "test": "npm --workspace @golfer-goodies/web test",
     "test:rules": "firebase emulators:exec --only firestore,storage --project golfer-goodies-local \"npm run test:rules:run\"",
     "test:rules:run": "vitest run tests/rules",
-    "test:emulators": "firebase emulators:exec --only auth,firestore,functions,storage --project golfer-goodies-local \"node scripts/seed-emulators.mjs && vitest run tests/emulators\"",
+    "test:emulators": "npm --workspace @golfer-goodies/functions run build && firebase emulators:exec --only auth,firestore,functions,storage --project golfer-goodies-local \"node scripts/seed-emulators.mjs && vitest run tests/emulators\"",
     "test:all": "npm run test && npm run test:rules && npm run test:emulators",
     "build": "npm run build --workspaces --if-present",
     "firebase:verify-seed": "node scripts/verify-seed.mjs"
