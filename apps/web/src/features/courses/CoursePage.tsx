@@ -9,22 +9,44 @@ import {
   PageHeader,
   StatusBadge,
 } from '../../components/ui';
-import { marketplaceRepository } from '../../data/marketplace-repository';
+import { getMarketplaceRepository } from '../../data/marketplace-repository';
 import type { Course, Product } from '../../types/marketplace';
 import { formatUsd, labelize } from '../../utils/format';
+import { EmulatorError } from '../../components/EmulatorError';
 export function CoursePage() {
   const { courseId = '' } = useParams();
   const [course, setCourse] = useState<Course | null>();
   const [products, setProducts] = useState<Product[]>([]);
+  const [error, setError] = useState('');
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     void Promise.all([
-      marketplaceRepository.getCourse(courseId),
-      marketplaceRepository.getProducts(courseId),
-    ]).then(([c, p]) => {
-      setCourse(c);
-      setProducts(p);
-    });
-  }, [courseId]);
+      getMarketplaceRepository().then((repository) =>
+        repository.getCourse(courseId),
+      ),
+      getMarketplaceRepository().then((repository) =>
+        repository.getProducts(courseId),
+      ),
+    ])
+      .then(([c, p]) => {
+        setCourse(c);
+        setProducts(p);
+      })
+      .catch(() => setError('The local course data could not be loaded.'));
+  }, [courseId, attempt]);
+  if (error)
+    return (
+      <div className="page">
+        <EmulatorError
+          message={error}
+          onRetry={() => {
+            setError('');
+            setCourse(undefined);
+            setAttempt((value) => value + 1);
+          }}
+        />
+      </div>
+    );
   if (course === undefined) return <LoadingState />;
   if (course === null)
     return <ErrorState message="That fictional course was not found." />;

@@ -4,15 +4,15 @@ import {
   Badge,
   Card,
   EmptyState,
-  ErrorState,
   LoadingState,
   PageHeader,
   StatusBadge,
   TextInput,
 } from '../../components/ui';
-import { marketplaceRepository } from '../../data/marketplace-repository';
+import { getMarketplaceRepository } from '../../data/marketplace-repository';
 import type { Course } from '../../types/marketplace';
 import { labelize } from '../../utils/format';
+import { EmulatorError } from '../../components/EmulatorError';
 export const filterCourses = (courses: Course[], query: string) => {
   const q = query.trim().toLowerCase();
   return courses.filter((c) =>
@@ -23,14 +23,23 @@ export function DiscoverPage() {
   const [courses, setCourses] = useState<Course[]>();
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    marketplaceRepository
-      .getCourses()
-      .then(setCourses)
-      .catch(() =>
-        setError('The fictional course catalog could not be loaded.'),
-      );
-  }, []);
+    let active = true;
+    getMarketplaceRepository()
+      .then((repository) => repository.getCourses())
+      .then((nextCourses) => {
+        if (active) setCourses(nextCourses);
+      })
+      .catch(() => {
+        if (active) {
+          setError('The fictional course catalog could not be loaded.');
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [attempt]);
   const shown = useMemo(
     () => filterCourses(courses ?? [], query),
     [courses, query],
@@ -51,7 +60,14 @@ export function DiscoverPage() {
         onChange={(e) => setQuery(e.target.value)}
       />
       {error ? (
-        <ErrorState message={error} />
+        <EmulatorError
+          message={error}
+          onRetry={() => {
+            setError('');
+            setCourses(undefined);
+            setAttempt((value) => value + 1);
+          }}
+        />
       ) : !courses ? (
         <LoadingState />
       ) : shown.length === 0 ? (

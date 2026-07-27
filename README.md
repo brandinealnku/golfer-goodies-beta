@@ -1,88 +1,89 @@
-# Golfer Goodies
+# Golfer Goodies v0.2
 
-**Order the course. Keep playing.**
+Golfer Goodies is a fictional marketplace demonstration. The unchanged v0.1 beta remains at the repository root and in `legacy/v0.1/`. Phase 3 adds a **local-only Firebase Emulator Suite foundation** to the React/Vite app in `apps/web`; no production Firebase project, deployment, real authentication workflow, real customer/course data, orders, Stripe, or payment processing exists.
 
-This repository contains two deliberately separate, fictional demonstrations. The dependency-free **v0.1 beta remains the compatibility baseline**, while `apps/web/` introduces the **v0.2 Phase 2 React, TypeScript, and Vite foundation**. Neither application connects to authentication, Firebase, Stripe, a payment processor, real inventory, or a backend.
+## Prerequisites
 
-## Preserved v0.1 beta
+- Node.js 22 and npm 10+
+- Java 21 (a supported runtime for the Firebase emulators)
+- Firebase CLI installed from the committed `firebase-tools` dependency
 
-The original beta remains unchanged at the repository root for the current GitHub Pages workflow and is also snapshotted under `legacy/v0.1/` with its HTML, CSS, JavaScript data service, fixtures, PWA files, icon, and dependency-free tests. Run it with:
-
-```bash
-python3 -m http.server 8000
-# http://localhost:8000/ or http://localhost:8000/legacy/v0.1/
-```
-
-Its roles, localStorage workflows, simulations, limitations, and tests remain documented by the Phase 1 assessment. The snapshot is a compatibility reference, not a production application.
-
-## v0.2 foundation
-
-Phase 2 supplies a strict TypeScript React application with hash routing, role-separated layouts, design tokens and dependency-free UI primitives, typed fictional data behind `MarketplaceRepository`, a working searchable Discover screen, course/product details, honest placeholders, safe environment validation, and a static-shell-only PWA foundation.
-
-### Structure
-
-- `apps/web/src/app`, `routes`, `layouts` — application composition, hash routes, and golfer/partner/platform shells.
-- `apps/web/src/components` — accessible foundational UI components.
-- `apps/web/src/config` — typed `demo | emulator | connected` mode validation.
-- `apps/web/src/data`, `types`, `utils` — repository abstraction, fictional seed data, shared domain types, and formatting.
-- `apps/web/src/features` — working marketplace/course screens and future-phase placeholders.
-- `apps/web/public` — subpath-relative manifest, icon, and conservative application-shell service worker.
-- `legacy/v0.1` — preserved static beta snapshot.
-
-Empty feature directories establish future module boundaries without claiming implementations.
-
-## Prerequisites and installation
-
-Use Node.js 20.19+ (or 22.12+) and npm 10+. From the v0.2 app:
-
-```bash
-cd apps/web
+```text
 npm install
+npm run firebase:verify
 ```
 
-The lockfile is committed. This environment could not reach the npm registry, so dependency installation and all package-driven checks must be rerun where registry access is available.
+The verifier checks Node, Java, and the local CLI and reports actionable errors; it never modifies system Java.
 
-## Development and application modes
+## Local project and services
 
-```bash
-cd apps/web
-cp .env.example .env.local
-npm run dev
+The only Firebase identity is fictional `golfer-goodies-local`.
+
+| Emulator       | Port |
+| -------------- | ---: |
+| UI             | 4000 |
+| Hosting        | 5000 |
+| Functions      | 5001 |
+| Firestore      | 8080 |
+| Authentication | 9099 |
+| Storage        | 9199 |
+
+No Firebase login or production credential is needed.
+
+## Demo mode (Firebase-independent)
+
+```text
+npm run dev:demo
 ```
 
-`VITE_APP_MODE` accepts `demo`, `emulator`, or `connected`; an absent local value defaults safely to `demo`, and invalid values stop startup rather than becoming connected. Only `demo` behavior exists in Phase 2. `emulator` and `connected` are typed reserved values, not working integrations. The non-production UI shows an environment badge. `.env.example` contains no secrets.
+Demo mode uses the in-bundle fictional repository, performs no Firebase initialization, retains hash routes and relative assets, and remains suitable for static GitHub Pages. The root Pages workflow still serves v0.1.
 
-Hash routing keeps refresh/direct navigation compatible with static hosts and repository subpaths. All app assets, manifest entries, service-worker registration, and Vite build URLs are relative (`base: './'`).
+## Complete local emulator workflow
 
-## Checks and production build
+```text
+npm run build
+npm run firebase:emulators
+# in a second terminal
+npm run firebase:seed
+npm --workspace @golfer-goodies/web run dev -- --mode emulator
+```
 
-```bash
+Open the web development URL shown by Vite, diagnostics at `#/dev/emulators`, or Emulator UI at `http://127.0.0.1:4000`. Emulator mode connects Auth, Firestore, Functions, and Storage only to loopback. If unavailable, the UI provides a safe error rather than raw Firebase details. Connected mode intentionally reports that it is not configured.
+
+## Seed, reset, import, and export
+
+```text
+npm run firebase:seed
+npm run firebase:reset
+npm run firebase:export
+firebase emulators:start --project golfer-goodies-local --import emulator-export
+```
+
+The deterministic scripts are authoritative. They refuse unknown projects, seed eight fictional `example.com` users idempotently, and create five courses, 40 categories, 40 alcohol-free products, and five promotions. Reset clears local Auth/Firestore/Storage and reseeds. Generated exports are ignored and optional. Local-only user credentials are documented in `docs/development/LOCAL_TEST_USERS.md`.
+
+## Checks
+
+```text
 npm run format:check
 npm run lint
 npm run typecheck
-npm run test:unit
-npm run test:components
 npm test
+npm run test:rules
+npm run test:emulators
+npm run test:all
 npm run build
 ```
 
-Tests cover mode validation, repository data, search, cards/details, USD formatting, the environment badge, role navigation, accessible form labels, Not Found handling, and hash-link subpath behavior. `dist/` is the build artifact. Phase 2 did not deploy it or replace the root v0.1 Pages artifact.
+Rules tests cover public active records, hidden/draft/paused records, immutable marketplace data, self-only allowlisted profiles, privilege escalation denial, image MIME/size/path restrictions, and course/product upload denial. Emulator integration covers local clients, seed status, courses/products, missing records, and the health function. CI uses Node 22, Java 21, the local project ID, and no login or deployment.
 
-## Current functionality
+## Architecture and security
 
-- Five stable fictional course archetypes and fictional products load through a repository interface.
-- Discover searches course name, city, or state and presents availability, fulfillment, estimates, and verified status in text.
-- Course details present fictional products, categories, availability, preparation estimates, and USD prices.
-- Cart, checkout, order tracking, account, partner operations, and platform operations are polished placeholders. Disabled Add controls explicitly say they are planned.
-- Golfer, partner, and platform navigation are separated. The shared foundation includes skip navigation, landmarks, labels, focus styles, reduced motion, responsive grids, and 48px golfer targets.
-- The PWA manifest is install-oriented; the minimal worker caches only a relative static shell. It does not cache private data or support offline order submission.
+React components use `MarketplaceRepository`; only the Firestore adapter queries Firebase. The centralized modular client connects once under emulator mode. Callable second-generation Functions expose safe local diagnostics only. Firestore and Storage rules default to deny. Seed/system writes use the Admin SDK only inside guarded local scripts. See `docs/architecture/FIREBASE_EMULATOR_FOUNDATION.md`.
 
-## GitHub Pages and known limitations
+The app retains semantic landmarks, keyboard focus, labels, live status, reduced motion, responsive layouts, accessible loading states, and safe error messaging. Manual assistive-technology and viewport QA remains required.
 
-The existing workflow still deploys v0.1 from the repository root. A future reviewed workflow must build and select a v0.2 artifact; no deployment was performed here. Hash routing avoids server rewrites, while `base: './'` preserves project-site paths. Installation/PWA behavior requires localhost or HTTPS.
+## Troubleshooting and limitations
 
-Phase 2 has no auth, authorization, tenancy, real cart/checkout/order, Firebase, Stripe, live availability, geolocation, notifications, backend security, or production readiness. Emulator and connected modes are not implemented. Automated browser accessibility, screen-reader, 200% zoom, viewport overflow, and service-worker lifecycle audits remain release QA. npm registry access was unavailable during this change, so package checks/build are recorded as environment-blocked rather than passed.
+Run `npm run firebase:verify` first. A refused seed indicates missing emulator host variables or the wrong project. Port conflicts require stopping the conflicting process; do not change only one client/config value. Build before starting Hosting Emulator. The diagnostics route is a development tool and reveals no tokens or secrets.
 
-## Next implementation phase
-
-**Phase 3: Firebase Emulator Foundation** should introduce only emulator-backed platform/data boundaries, tenant-safe schema and rules tests, converters, repeatable fictional seeding, transactional/idempotent operations, and migration rollback while retaining demo mode. It must not configure production or Stripe.
+Phase 3 does not implement sign-in UI, account linking, claims, memberships, privileged course writes, orders, inventory transactions, uploads UI, App Check, notifications, production projects, deployment, Stripe, or payments. Firebase client identifiers are local placeholders, not secrets. Never use the test password outside local emulators.

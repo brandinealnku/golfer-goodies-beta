@@ -8,7 +8,16 @@ export function parseAppMode(value: string | undefined): AppMode {
     );
   return candidate as AppMode;
 }
+function configuredMode() {
+  const localOverride =
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('appMode')
+      : null;
+  return localOverride === 'demo'
+    ? 'demo'
+    : parseAppMode(import.meta.env.VITE_APP_MODE);
+}
 export const environment = {
-  mode: parseAppMode(import.meta.env.VITE_APP_MODE),
+  mode: configuredMode(),
   production: import.meta.env.PROD,
 } as const;

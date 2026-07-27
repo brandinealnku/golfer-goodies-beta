@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore { match /databases/{database}/documents {
+  function publicCourse(courseId) { return get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'active' && get(/databases/$(database)/documents/courses/$(courseId)).data.marketplaceVisible == true; }
+  function signedInAs(uid) { return request.auth != null && request.auth.uid == uid; }
+  function profileFields() { return request.resource.data.keys().hasOnly(['displayName','preferences','createdAt','updatedAt']) && request.resource.data.displayName is string && request.resource.data.preferences is map; }
+  match /courses/{courseId} { allow read: if resource.data.status == 'active' && resource.data.marketplaceVisible == true; allow write: if false;
+    match /categories/{id} { allow read: if publicCourse(courseId); allow write: if false; }
+    match /products/{id} { allow read: if publicCourse(courseId) && resource.data.status == 'active'; allow write: if false; }
+    match /promotions/{id} { allow read: if publicCourse(courseId) && resource.data.active == true && resource.data.public == true; allow write: if false; }
+  }
+  match /users/{uid} { allow read: if signedInAs(uid); allow create: if signedInAs(uid) && profileFields(); allow update: if signedInAs(uid) && profileFields() && request.resource.data.createdAt == resource.data.createdAt; allow delete: if false; }
+  match /system/{id} { allow read, write: if false; }
+  match /{document=**} { allow read, write: if false; }
+}}

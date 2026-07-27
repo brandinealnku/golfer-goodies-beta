@@ -1,3 +1,4 @@
+import { environment } from '../config/environment';
 import type { Course, Product } from '../types/marketplace';
 import { demoCourses, demoProducts } from './demo-data';
 export interface MarketplaceRepository {
@@ -16,5 +17,16 @@ export class DemoMarketplaceRepository implements MarketplaceRepository {
     return structuredClone(demoProducts.filter((p) => p.courseId === courseId));
   }
 }
-export const marketplaceRepository: MarketplaceRepository =
-  new DemoMarketplaceRepository();
+let selected: Promise<MarketplaceRepository> | undefined;
+export function getMarketplaceRepository() {
+  if (!selected)
+    selected =
+      environment.mode === 'demo'
+        ? Promise.resolve(new DemoMarketplaceRepository())
+        : environment.mode === 'emulator'
+          ? import('./firestore-marketplace-repository').then(
+              (m) => new m.FirestoreMarketplaceRepository(),
+            )
+          : Promise.reject(new Error('Connected mode is not configured.'));
+  return selected;
+}

@@ -1,12 +1,12 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, it } from 'vitest';
 import { App } from './App';
 const route = (h: string) => {
-  location.hash = h;
-  render(<App />);
+  window.history.replaceState(null, '', h);
+  return render(<App />);
 };
-beforeEach(() => (location.hash = ''));
+beforeEach(() => window.history.replaceState(null, '', '#/'));
 it('discovers and searches courses with golfer nav and badge', async () => {
   route('#/discover');
   expect(screen.getByLabelText(/environment: demo/i)).toBeInTheDocument();
@@ -25,17 +25,16 @@ it('renders detail and currency', async () => {
   ).toBeInTheDocument();
   expect(screen.getByText('$6.50')).toBeInTheDocument();
 });
-it('renders role layouts', async () => {
-  route('#/partner');
+it('renders role layouts', () => {
+  const view = route('#/partner');
   expect(
     screen.getByRole('navigation', { name: 'Partner navigation' }),
   ).toBeInTheDocument();
-  location.hash = '#/platform';
-  await waitFor(() =>
-    expect(
-      screen.getByRole('navigation', { name: 'Platform navigation' }),
-    ).toBeInTheDocument(),
-  );
+  view.unmount();
+  route('#/platform');
+  expect(
+    screen.getByRole('navigation', { name: 'Platform navigation' }),
+  ).toBeInTheDocument();
 });
 it('renders not found', () => {
   route('#/nope');

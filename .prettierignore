@@ -1,0 +1,12 @@
+.firebaserc
+legacy/
+assets/
+data/
+tests/index.html
+tests/tests.js
+index.html
+404.html
+manifest.webmanifest
+service-worker.js
+emulator-export/
+docs/V02_MIGRATION_ASSESSMENT.md

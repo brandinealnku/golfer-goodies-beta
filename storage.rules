@@ -1,0 +1,6 @@
+rules_version = '2'; service firebase.storage { match /b/{bucket}/o {
+ match /courses/{courseId}/branding/{fileName} { allow read, write: if false; }
+ match /courses/{courseId}/products/{productId}/{fileName} { allow read, write: if false; }
+ match /users/{uid}/profile/{fileName} { allow read: if request.auth != null && request.auth.uid == uid; allow write: if request.auth != null && request.auth.uid == uid && request.resource != null && request.resource.size < 2 * 1024 * 1024 && request.resource.contentType.matches('image/.*'); }
+ match /{allPaths=**} { allow read, write: if false; }
+}}

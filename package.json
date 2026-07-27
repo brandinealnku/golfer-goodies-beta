@@ -1,0 +1,39 @@
+{
+  "name": "golfer-goodies",
+  "private": true,
+  "version": "0.3.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/web",
+    "functions"
+  ],
+  "scripts": {
+    "dev": "npm run dev:demo",
+    "dev:demo": "npm --workspace @golfer-goodies/web run dev -- --mode demo",
+    "dev:emulator": "node scripts/start-local-stack.mjs",
+    "firebase:emulators": "firebase emulators:start --project golfer-goodies-local",
+    "firebase:seed": "node scripts/seed-emulators.mjs",
+    "firebase:reset": "node scripts/reset-emulators.mjs",
+    "firebase:export": "node scripts/export-emulators.mjs",
+    "firebase:verify": "node scripts/verify-environment.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm --workspace @golfer-goodies/web test",
+    "test:rules": "firebase emulators:exec --only firestore,storage --project golfer-goodies-local \"npm run test:rules:run\"",
+    "test:rules:run": "vitest run tests/rules",
+    "test:emulators": "npm --workspace @golfer-goodies/functions run build && firebase emulators:exec --only auth,firestore,functions,storage --project golfer-goodies-local \"node scripts/seed-emulators.mjs && vitest run tests/emulators\"",
+    "test:all": "npm run test && npm run test:rules && npm run test:emulators",
+    "build": "npm run build --workspaces --if-present",
+    "firebase:verify-seed": "node scripts/verify-seed.mjs"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "3.0.3",
+    "firebase-tools": "14.15.2",
+    "prettier": "3.6.2",
+    "vitest": "3.2.4"
+  }
+}

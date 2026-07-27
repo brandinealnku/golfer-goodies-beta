@@ -199,6 +199,8 @@ export const EnvironmentBadge = () =>
       className="environment-badge"
       aria-label={`Application environment: ${environment.mode}`}
     >
-      {environment.mode} environment
+      {environment.mode === 'emulator'
+        ? 'Local Emulator'
+        : `${environment.mode} environment`}
     </span>
   ) : null;

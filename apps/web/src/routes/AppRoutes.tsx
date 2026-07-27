@@ -1,7 +1,13 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { CoursePage } from '../features/courses/CoursePage';
 import { DiscoverPage } from '../features/marketplace/DiscoverPage';
 import { PlaceholderPage } from '../features/PlaceholderPage';
+const EmulatorDiagnosticsPage = lazy(() =>
+  import('../features/development/EmulatorDiagnosticsPage').then((module) => ({
+    default: module.EmulatorDiagnosticsPage,
+  })),
+);
 import {
   GolferLayout,
   PartnerLayout,
@@ -19,6 +25,16 @@ export function AppRoutes() {
       <Route element={<GolferLayout />}>
         <Route path="/" element={<Navigate to="/discover" replace />} />
         <Route path="/discover" element={<DiscoverPage />} />
+        <Route
+          path="/dev/emulators"
+          element={
+            <Suspense
+              fallback={<p role="status">Loading local diagnostics…</p>}
+            >
+              <EmulatorDiagnosticsPage />
+            </Suspense>
+          }
+        />
         <Route path="/course/:courseId" element={<CoursePage />} />
         {[
           ['cart', 'Cart'],
