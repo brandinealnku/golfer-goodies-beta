@@ -14,6 +14,7 @@ import type { Course } from '../../types/marketplace';
 import { labelize } from '../../utils/format';
 import { EmulatorError } from '../../components/EmulatorError';
 import { formatUsd } from '../../utils/format';
+import { useCourseContext } from '../../state/course-context';
 export const filterCourses = (courses: Course[], query: string) => {
   const q = query.trim().toLowerCase();
   return courses.filter((c) =>
@@ -21,6 +22,7 @@ export const filterCourses = (courses: Course[], query: string) => {
   );
 };
 export function DiscoverPage() {
+  const { context } = useCourseContext();
   const [courses, setCourses] = useState<Course[]>();
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
@@ -54,6 +56,12 @@ export function DiscoverPage() {
         Choose a fictional course before browsing its menu. Individual products
         are never shown without course context.
       </p>
+      {context.mode === 'none' && (
+        <div className="alert" role="status">
+          <strong>No course selected.</strong> Search or choose a participating
+          course to see its menu.
+        </div>
+      )}
       <TextInput
         label="Search courses by name, city, or state"
         type="search"

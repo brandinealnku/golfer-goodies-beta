@@ -14,10 +14,32 @@ import { getMarketplaceRepository } from '../../data/marketplace-repository';
 import { useCourseContext } from '../../state/course-context';
 import type {
   Course,
+  CourseEligibility,
   Product,
   VerificationMethod,
 } from '../../types/marketplace';
 import { formatUsd, labelize } from '../../utils/format';
+
+type NotEligible = Extract<CourseEligibility, { status: 'not_eligible' }>;
+export function getCourseRestriction(
+  course: Course,
+  expired: boolean,
+): NotEligible | undefined {
+  if (course.availability === 'closed')
+    return { status: 'not_eligible', reason: 'course_closed' };
+  if (course.orderingPaused)
+    return { status: 'not_eligible', reason: 'ordering_paused' };
+  if (expired)
+    return { status: 'not_eligible', reason: 'verification_expired' };
+}
+
+const restrictionMessage: Record<NotEligible['reason'], string> = {
+  outside_service_area: 'Outside this course’s service area.',
+  course_closed:
+    'This course is closed. Browse the menu or choose another course.',
+  ordering_paused: 'Ordering is paused. Browse now and try again later.',
+  verification_expired: 'Your Active Round expired. Verify again to order.',
+};
 
 export function CoursePage() {
   const { courseId = '' } = useParams();
@@ -27,6 +49,8 @@ export function CoursePage() {
   const [code, setCode] = useState('');
   const [qr, setQr] = useState('');
   const [message, setMessage] = useState('');
+  const [locationEligibility, setLocationEligibility] =
+    useState<CourseEligibility>();
   useEffect(() => {
     let current = true;
     getMarketplaceRepository()
@@ -38,6 +62,8 @@ export function CoursePage() {
         if (current) {
           setCourse(selected);
           setProducts(scoped);
+          setMessage('');
+          setLocationEligibility(undefined);
           if (selected && context.selectedCourseId !== courseId)
             selectCourse(courseId);
         }
@@ -46,8 +72,9 @@ export function CoursePage() {
     return () => {
       current = false;
     };
-  }, [courseId]); // selection intentionally follows the route
-  if (course === undefined) return <LoadingState />;
+  }, [courseId, context.selectedCourseId, selectCourse]);
+  if (course === undefined || (course && course.id !== courseId))
+    return <LoadingState />;
   if (!course)
     return (
       <ErrorState message="That fictional course or its products could not be loaded." />
@@ -55,15 +82,35 @@ export function CoursePage() {
   const active =
     context.mode === 'active_round' &&
     context.activeRound.courseId === course.id;
-  const blockedReason =
-    course.availability === 'closed'
-      ? 'This course is closed. Browse the menu or choose another course.'
-      : course.orderingPaused
-        ? 'Ordering is paused. Browse now and try again later.'
-        : '';
+  const restriction = getCourseRestriction(
+    course,
+    context.mode === 'browse' && Boolean(context.expired),
+  );
   const complete = (method: VerificationMethod) => {
     verify(method);
     setMessage('Demo verification only. No real location was collected.');
+  };
+  const confirmDemoLocation = () => {
+    if (course.demoLocationResult === 'uncertain') {
+      setLocationEligibility({
+        status: 'uncertain',
+        reason: 'low_location_accuracy',
+        alternatives: ['demo_qr', 'demo_course_code'],
+      });
+      setMessage(
+        'Demo verification is uncertain. No real location was collected.',
+      );
+      return;
+    }
+    if (course.demoLocationResult === 'outside_service_area') {
+      setLocationEligibility({
+        status: 'not_eligible',
+        reason: 'outside_service_area',
+      });
+      setMessage('Demo result: outside this course’s service area.');
+      return;
+    }
+    complete('simulated_location');
   };
   return (
     <div className="page">
@@ -89,14 +136,23 @@ export function CoursePage() {
             : 'Browse only'}
         </dd>
       </dl>
-      {context.mode === 'browse' && context.expired && (
+      {course.fulfillmentMethods.length === 1 &&
+        course.fulfillmentMethods[0] === 'pickup' && (
+          <div className="alert" role="status">
+            <strong>Pickup-only availability.</strong> On-course delivery is not
+            offered here. Browse the pickup menu or choose another course.
+          </div>
+        )}
+      {restriction?.reason === 'verification_expired' && (
         <div className="alert" role="status">
-          <strong>Active Round expired.</strong> Verify again to order.
+          <strong>Active Round expired.</strong>{' '}
+          {restrictionMessage.verification_expired}
         </div>
       )}
-      {blockedReason ? (
+      {restriction && restriction.reason !== 'verification_expired' ? (
         <div className="alert" role="status">
-          {blockedReason} <Link to="/discover">Choose another course</Link>.
+          {restrictionMessage[restriction.reason]}{' '}
+          <Link to="/discover">Choose another course</Link>.
         </div>
       ) : (
         !active && (
@@ -106,16 +162,32 @@ export function CoursePage() {
               These methods are demonstrations, not secure location validation.
               No browser location is requested.
             </p>
-            <Button onClick={() => complete('simulated_location')}>
-              Confirm demo location
-            </Button>
+            <Button onClick={confirmDemoLocation}>Confirm demo location</Button>
+            {locationEligibility?.status === 'uncertain' && (
+              <div className="alert" role="status">
+                <strong>Verification uncertain.</strong> Location accuracy is
+                low in this simulation. Use the demo QR or course code instead.
+              </div>
+            )}
+            {locationEligibility?.status === 'not_eligible' && (
+              <div className="alert" role="status">
+                <strong>Outside service area.</strong> Continue browsing, use a
+                non-location demo method, or{' '}
+                <Link to="/discover">choose another course</Link>.
+              </div>
+            )}
             <div className="verification-entry">
               <TextInput
                 id="demo-qr"
                 label="Demo QR token"
                 value={qr}
                 onChange={(e) => setQr(e.target.value)}
-                aria-describedby="qr-help qr-error"
+                aria-describedby={
+                  message.startsWith('Demo QR invalid')
+                    ? 'qr-help verification-message'
+                    : 'qr-help'
+                }
+                aria-invalid={message.startsWith('Demo QR invalid')}
               />
               <small id="qr-help">Fictional token: {course.demoQrToken}</small>
               <Button
@@ -136,7 +208,12 @@ export function CoursePage() {
                 label="Demo course code"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                aria-describedby="code-help code-error"
+                aria-describedby={
+                  message.startsWith('Demo course code invalid')
+                    ? 'code-help verification-message'
+                    : 'code-help'
+                }
+                aria-invalid={message.startsWith('Demo course code invalid')}
               />
               <small id="code-help">
                 Fictional demonstration code; it is not authentication.
@@ -157,6 +234,7 @@ export function CoursePage() {
         )
       )}
       <p
+        id="verification-message"
         aria-live="polite"
         className={message.includes('invalid') ? 'error-message' : ''}
       >
@@ -182,10 +260,10 @@ export function CoursePage() {
                 {p.available ? 'Available' : 'Products unavailable'} · about{' '}
                 {p.preparationMinutes} minutes
               </p>
-              <Button disabled={!active || !p.available}>
+              <Button disabled>
                 {active
                   ? p.available
-                    ? 'Add to cart'
+                    ? 'Ordering planned — not yet available'
                     : 'Unavailable'
                   : 'Verify course to order'}
               </Button>

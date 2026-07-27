@@ -1,24 +1,25 @@
 # Golfer Goodies v0.2 implementation status
 
 **Updated:** 2026-07-27
-**Current phase:** Phase 3 — Firebase Local Emulator Foundation implemented, execution verification blocked by dependency registry access
+**Current phase:** Phase 2.5 — Course Context and Order Eligibility UX
 **Release posture:** v0.1 and Firebase-independent demo mode remain preserved. No Firebase service was deployed or connected to production.
 
 ## Phase 2.5 — Course context and eligibility UX
 
 Completed in the React demo: course-only discovery, persistent selected-course context, repository-enforced course product scoping, browse-only ordering blocks, a persistent/expiring one-course Active Round, simulated-location confirmation, fictional QR and course-code verification, contextual golfer navigation/header, closed/paused/pickup-only presentations, accessible live announcements, and controlled invalid/empty states. The product UI does not import raw demo data.
 
-Automated coverage includes discovery without products, required repository course IDs, cross-course isolation, browse-only controls, all three demonstration verification paths, invalid codes, one-course rounds, expiration, course changes, contextual navigation/header, announcements, and confirmation that browser geolocation is not called. See the final-results section and current commit history for actual command results.
+Vitest coverage was added for discovery without products, required repository course IDs, cross-course isolation, browse-only controls, all three demonstration verification paths, invalid codes, one-course rounds, expiration, course changes, contextual navigation/header, announcements, and confirmation that browser geolocation is not called. Those dependency-based tests could not execute in this environment. The dependency-free contract suite did execute successfully; see the actual results below.
 
-| Phase 2.5 check              | Actual result                                                                                          |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Formatting                   | Passed: `npm run format:check`.                                                                        |
-| Lint                         | Not runnable: installed dependencies are absent (`@eslint/js` and `typescript-eslint` cannot resolve). |
-| Typecheck                    | Not runnable: React, Firebase, Node, and test type packages are absent.                                |
-| Unit tests                   | Not runnable: `vitest` is absent.                                                                      |
-| Component tests              | Not runnable: `vitest` is absent.                                                                      |
-| Production build             | Not runnable: TypeScript dependencies and Vite are absent.                                             |
-| Browser screenshot/manual QA | Not runnable because the application dependencies are absent.                                          |
+| Phase 2.5 check              | Actual result                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------ |
+| Formatting                   | Passed: `npm run format:check`.                                                      |
+| Dependency-free contracts    | Passed: two course-scoping and no-geolocation source guards.                         |
+| Lint                         | Blocked: `npm ci` did not materialize package files; ESLint packages cannot resolve. |
+| Typecheck                    | Blocked: `npm ci` did not materialize React, Node, Firebase, and test type packages. |
+| Unit tests                   | Not runnable: `vitest` is absent.                                                    |
+| Component tests              | Not runnable: `vitest` is absent.                                                    |
+| Production build             | Not runnable: TypeScript dependencies and Vite are absent.                           |
+| Browser screenshot/manual QA | Not runnable because the application dependencies are absent.                        |
 
 Real geolocation, background tracking, secure QR validation, server-side eligibility, authentication, inventory, checkout, and payments remain deferred. Demo verification is explicitly not security.
 

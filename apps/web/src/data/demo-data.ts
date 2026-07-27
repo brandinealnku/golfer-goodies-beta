@@ -1,4 +1,11 @@
-import type { Course, Product } from '../types/marketplace';
+import type { Course, Product, ProductCategory } from '../types/marketplace';
+export const sharedProductTaxonomy: readonly ProductCategory[] = [
+  'food',
+  'drink',
+  'gear',
+  'essentials',
+  'service',
+];
 export const demoCourses: Course[] = [
   {
     id: 'summit-pines',
@@ -15,6 +22,7 @@ export const demoCourses: Course[] = [
     demoQrToken: 'SUMMIT-DEMO-QR',
     minimumOrderCents: 1200,
     promotion: 'Demo turn special',
+    demoLocationResult: 'eligible',
   },
   {
     id: 'meadow-loop',
@@ -30,6 +38,7 @@ export const demoCourses: Course[] = [
     demoCode: 'TURN9',
     demoQrToken: 'MEADOW-DEMO-QR',
     minimumOrderCents: 1000,
+    demoLocationResult: 'uncertain',
   },
   {
     id: 'circuit-links',
@@ -46,6 +55,7 @@ export const demoCourses: Course[] = [
     demoQrToken: 'CIRCUIT-DEMO-QR',
     minimumOrderCents: 1500,
     orderingPaused: true,
+    demoLocationResult: 'eligible',
   },
   {
     id: 'heritage-oaks',
@@ -61,6 +71,7 @@ export const demoCourses: Course[] = [
     demoCode: 'OAKS5',
     demoQrToken: 'OAKS-DEMO-QR',
     minimumOrderCents: 1000,
+    demoLocationResult: 'eligible',
   },
   {
     id: 'cedar-bend-muni',
@@ -76,6 +87,7 @@ export const demoCourses: Course[] = [
     demoCode: 'CEDAR3',
     demoQrToken: 'CEDAR-DEMO-QR',
     minimumOrderCents: 800,
+    demoLocationResult: 'outside_service_area',
   },
 ];
 export const demoProducts: Product[] = demoCourses.flatMap((c, i) => [
@@ -105,4 +117,6 @@ const courseIds = new Set(demoCourses.map((course) => course.id));
 for (const product of demoProducts) {
   if (!courseIds.has(product.courseId))
     throw new Error(`Invalid demo product course: ${product.id}`);
+  if (!sharedProductTaxonomy.includes(product.category))
+    throw new Error(`Invalid demo product category: ${product.id}`);
 }

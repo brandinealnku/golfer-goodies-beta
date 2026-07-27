@@ -4,6 +4,8 @@
 
 Discovery lists fictional participating courses and course-level summaries only. A course route establishes the persisted selection. Products never appear without that context, and `MarketplaceRepository.getProductsForCourse(courseId)` enforces ownership and public visibility before returning records.
 
+Demo product categories use an explicitly declared shared taxonomy. Product records still carry a mandatory course ID; a development-time validator rejects unknown course IDs and categories.
+
 ## Visibility versus eligibility
 
 Selection controls **visibility**; verification controls **ordering eligibility**. Browse mode permits course information, menus, price, availability, and promotions but blocks actionable cart behavior. Closed and ordering-paused courses explain their state; pickup-only courses advertise only pickup. A discriminated `CourseContext` and `CourseEligibility` model documents none, browse, active, uncertain, outside-area, closed, paused, and expired outcomes without unrelated Boolean flags.

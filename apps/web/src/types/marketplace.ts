@@ -38,6 +38,7 @@ export interface Course {
   minimumOrderCents: number;
   promotion?: string;
   orderingPaused?: boolean;
+  demoLocationResult?: 'eligible' | 'uncertain' | 'outside_service_area';
 }
 export interface Product {
   id: string;

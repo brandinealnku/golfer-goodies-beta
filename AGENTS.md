@@ -32,8 +32,13 @@
 
 ## Permanent course-context rules
 
-- Never show products without course context or query marketplace-wide products for the golfer ordering flow.
-- Every product must belong to a course; course selection controls product visibility and course verification controls ordering eligibility.
+- Never show products without course context.
+- Never query marketplace-wide products for the golfer ordering flow.
+- Every product must belong to a course.
+- Course selection controls product visibility.
+- Course verification controls ordering eligibility.
 - Never rely solely on client-side eligibility for connected orders.
-- Never request geolocation automatically on page load; preserve non-location alternatives and do not store continuous location history.
+- Never request geolocation automatically on page load.
+- Preserve non-location alternatives.
+- Do not store continuous location history.
 - Preserve one-course-per-cart behavior.

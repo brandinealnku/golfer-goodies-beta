@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { App } from './App';
+import type { VerificationMethod } from '../types/marketplace';
 const route = (hash: string) => {
   window.history.replaceState(null, '', hash);
   return render(<App />);
@@ -19,6 +20,7 @@ it('discovery shows courses, course facts, and no individual products', async ()
   ).toHaveTextContent('Find Course');
   expect(screen.queryByText('Clubhouse Sandwich')).not.toBeInTheDocument();
   expect(screen.queryByRole('link', { name: /menu/i })).not.toBeInTheDocument();
+  expect(screen.getByRole('status')).toHaveTextContent('No course selected');
 });
 it('selects a course, scopes products, blocks ordering, and changes navigation', async () => {
   route('#/course/summit-pines');
@@ -34,7 +36,7 @@ it('selects a course, scopes products, blocks ordering, and changes navigation',
     screen.getAllByRole('button', { name: 'Verify course to order' })[0],
   ).toBeDisabled();
 });
-it.each([
+it.each<[string, VerificationMethod]>([
   ['Confirm demo location', 'simulated_location'],
   ['Check demo QR', 'demo_qr'],
   ['Verify demo code', 'demo_course_code'],
@@ -54,17 +56,39 @@ it.each([
     JSON.parse(localStorage.getItem('golfer-goodies.course-context.v1')!)
       .activeRound,
   ).toMatchObject({ courseId: 'summit-pines', verificationMethod: method });
+  expect(
+    screen.getAllByRole('button', {
+      name: 'Ordering planned — not yet available',
+    })[0],
+  ).toBeDisabled();
 });
 it('rejects invalid demo code and announces status without geolocation', async () => {
-  const geolocation = vi.spyOn(navigator.geolocation, 'getCurrentPosition');
+  const getCurrentPosition = vi.fn();
+  Object.defineProperty(navigator, 'geolocation', {
+    configurable: true,
+    value: { getCurrentPosition },
+  });
   const user = userEvent.setup();
   route('#/course/summit-pines');
   await screen.findByText('Clubhouse Sandwich');
   await user.type(screen.getByLabelText('Demo course code'), 'WRONG');
   await user.click(screen.getByRole('button', { name: 'Verify demo code' }));
   expect(screen.getByText(/code invalid/i)).toBeInTheDocument();
-  expect(geolocation).not.toHaveBeenCalled();
-  geolocation.mockRestore();
+  expect(getCurrentPosition).not.toHaveBeenCalled();
+});
+it('rejects an invalid demo QR and associates the error with its field', async () => {
+  const user = userEvent.setup();
+  route('#/course/summit-pines');
+  await screen.findByText('Clubhouse Sandwich');
+  const field = screen.getByLabelText('Demo QR token');
+  await user.type(field, 'NOT-A-TOKEN');
+  await user.click(screen.getByRole('button', { name: 'Check demo QR' }));
+  expect(screen.getByText(/Demo QR invalid/i)).toBeInTheDocument();
+  expect(field).toHaveAttribute('aria-invalid', 'true');
+  expect(field).toHaveAttribute(
+    'aria-describedby',
+    'qr-help verification-message',
+  );
 });
 it('changing course replaces product and Active Round context', async () => {
   const user = userEvent.setup();
@@ -81,4 +105,45 @@ it('changing course replaces product and Active Round context', async () => {
   expect(
     screen.getByRole('complementary', { name: 'Course context' }),
   ).toHaveTextContent('Browse only');
+});
+
+it('offers non-location alternatives when demo location is uncertain', async () => {
+  const user = userEvent.setup();
+  route('#/course/meadow-loop');
+  await screen.findByText('Trail Mix Cup');
+  await user.click(
+    screen.getByRole('button', { name: 'Confirm demo location' }),
+  );
+  expect(screen.getByText(/Verification uncertain/i)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Check demo QR' })).toBeEnabled();
+  expect(
+    screen.getByRole('button', { name: 'Verify demo code' }),
+  ).toBeEnabled();
+});
+
+it('shows an actionable outside-service-area demo result', async () => {
+  const user = userEvent.setup();
+  route('#/course/cedar-bend-muni');
+  await screen.findByText('Clubhouse Sandwich');
+  await user.click(
+    screen.getByRole('button', { name: 'Confirm demo location' }),
+  );
+  expect(screen.getByText(/Outside service area/i)).toBeInTheDocument();
+  expect(
+    screen.getByRole('link', { name: 'choose another course' }),
+  ).toBeInTheDocument();
+});
+
+it('explains paused, closed, and pickup-only course states', async () => {
+  const paused = route('#/course/circuit-links');
+  expect(await screen.findByText(/Ordering is paused/i)).toBeInTheDocument();
+  paused.unmount();
+  const closed = route('#/course/heritage-oaks');
+  expect(await screen.findByText(/course is closed/i)).toBeInTheDocument();
+  expect(screen.getByText(/Pickup-only availability/i)).toBeInTheDocument();
+  closed.unmount();
+  route('#/course/cedar-bend-muni');
+  expect(
+    await screen.findByText(/Pickup-only availability/i),
+  ).toBeInTheDocument();
 });

@@ -2,6 +2,7 @@ import {
   createContext,
   type ReactNode,
   useContext,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -45,11 +46,21 @@ const Context = createContext<CourseContextApi | null>(null);
 function readContext(): CourseContext {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return normalizeCourseContext(
-      raw
-        ? (JSON.parse(raw) as CourseContext)
-        : { selectedCourseId: null, mode: 'none' },
-    );
+    if (!raw) return { selectedCourseId: null, mode: 'none' };
+    const value: unknown = JSON.parse(raw);
+    if (!value || typeof value !== 'object' || !('mode' in value))
+      return { selectedCourseId: null, mode: 'none' };
+    const candidate = value as Partial<CourseContext>;
+    if (candidate.mode === 'none')
+      return { selectedCourseId: null, mode: 'none' };
+    if (
+      typeof candidate.selectedCourseId !== 'string' ||
+      (candidate.mode !== 'browse' && candidate.mode !== 'active_round')
+    )
+      return { selectedCourseId: null, mode: 'none' };
+    if (candidate.mode === 'active_round' && !('activeRound' in candidate))
+      return { selectedCourseId: candidate.selectedCourseId, mode: 'browse' };
+    return normalizeCourseContext(candidate as CourseContext);
   } catch {
     return { selectedCourseId: null, mode: 'none' };
   }
@@ -80,45 +91,51 @@ export function CourseContextProvider({ children }: { children: ReactNode }) {
     }, remaining);
     return () => window.clearTimeout(timer);
   }, [context]);
+  const selectCourse = useCallback((courseId: string) => {
+    setContext({ selectedCourseId: courseId, mode: 'browse' });
+    setAnnouncement('Course changed. Browse-only mode is active.');
+  }, []);
+  const verify = useCallback((method: VerificationMethod, now = new Date()) => {
+    setContext((current) => {
+      if (!current.selectedCourseId) return current;
+      const round: ActiveRound = {
+        courseId: current.selectedCourseId,
+        verificationMethod: method,
+        verifiedAt: now.toISOString(),
+        expiresAt: new Date(
+          now.getTime() + ACTIVE_ROUND_MINUTES * 60_000,
+        ).toISOString(),
+      };
+      return {
+        selectedCourseId: round.courseId,
+        mode: 'active_round',
+        activeRound: round,
+      };
+    });
+    setAnnouncement('Demo verification complete. Active Round started.');
+  }, []);
+  const endRound = useCallback(() => {
+    setContext((current) =>
+      current.selectedCourseId
+        ? { selectedCourseId: current.selectedCourseId, mode: 'browse' }
+        : current,
+    );
+    setAnnouncement('Active Round ended. Browse-only mode is active.');
+  }, []);
+  const clearCourse = useCallback(() => {
+    setContext({ selectedCourseId: null, mode: 'none' });
+    setAnnouncement('Course cleared. Choose a course to browse products.');
+  }, []);
   const api = useMemo<CourseContextApi>(
     () => ({
       context,
       announcement,
-      selectCourse(courseId) {
-        setContext({ selectedCourseId: courseId, mode: 'browse' });
-        setAnnouncement('Course changed. Browse-only mode is active.');
-      },
-      verify(method, now = new Date()) {
-        if (!context.selectedCourseId) return;
-        const round: ActiveRound = {
-          courseId: context.selectedCourseId,
-          verificationMethod: method,
-          verifiedAt: now.toISOString(),
-          expiresAt: new Date(
-            now.getTime() + ACTIVE_ROUND_MINUTES * 60_000,
-          ).toISOString(),
-        };
-        setContext({
-          selectedCourseId: round.courseId,
-          mode: 'active_round',
-          activeRound: round,
-        });
-        setAnnouncement('Demo verification complete. Active Round started.');
-      },
-      endRound() {
-        if (!context.selectedCourseId) return;
-        setContext({
-          selectedCourseId: context.selectedCourseId,
-          mode: 'browse',
-        });
-        setAnnouncement('Active Round ended. Browse-only mode is active.');
-      },
-      clearCourse() {
-        setContext({ selectedCourseId: null, mode: 'none' });
-        setAnnouncement('Course cleared. Choose a course to browse products.');
-      },
+      selectCourse,
+      verify,
+      endRound,
+      clearCourse,
     }),
-    [announcement, context],
+    [announcement, clearCourse, context, endRound, selectCourse, verify],
   );
   return <Context.Provider value={api}>{children}</Context.Provider>;
 }
