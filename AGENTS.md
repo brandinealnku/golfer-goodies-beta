@@ -6,3 +6,5 @@
 - Add or update dependency-free tests when behavior changes.
 - Update README capabilities and limitations honestly; distinguish simulation from live integrations.
 - Do not claim a feature works unless it has been verified.
+- Treat the v0.1 static beta as the compatibility baseline: evolve it incrementally and do not remove a working role, route, workflow, offline fallback, or dependency-free test without an approved replacement and regression coverage.
+- Keep planned v0.2 integrations behind explicit boundaries and preserve a documented local-demo mode until their production behavior, security rules, and migration path have been verified.
