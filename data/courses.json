@@ -318,5 +318,217 @@
     ],
     "contact": "ops@circuit.example",
     "featuredDescription": "The connected round."
+  },
+  {
+    "id": "c4",
+    "name": "Heritage Oak Club",
+    "slug": "heritage-oak",
+    "city": "Fox Hollow",
+    "state": "VA",
+    "description": "A private-club demonstration pairing attentive service with a calm, classic parkland round.",
+    "image": "gradient-oak",
+    "rating": 4.8,
+    "reviewCount": 164,
+    "distance": 8.2,
+    "open": false,
+    "delivery": false,
+    "turnPickup": true,
+    "clubhousePickup": true,
+    "amenities": [
+      "Caddie service",
+      "Practice range",
+      "Member guest desk"
+    ],
+    "deliveryEstimate": "Closed \u00b7 Opens Tuesday at 8:00 AM",
+    "minimumOrder": 15,
+    "featured": false,
+    "active": true,
+    "categories": [
+      "food",
+      "beverages",
+      "gear",
+      "experiences"
+    ],
+    "hours": {
+      "Monday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Tuesday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Wednesday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Thursday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Friday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Saturday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Sunday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      }
+    },
+    "promotions": [],
+    "contact": "partner-c4@example.invalid",
+    "featuredDescription": "Traditional private club"
+  },
+  {
+    "id": "c5",
+    "name": "Pine Creek Municipal",
+    "slug": "pine-creek-municipal",
+    "city": "Mesa Vista",
+    "state": "AZ",
+    "description": "An affordable community course with quick pickup, practical essentials, and welcoming public play.",
+    "image": "gradient-desert",
+    "rating": 4.5,
+    "reviewCount": 487,
+    "distance": 3.7,
+    "open": true,
+    "delivery": false,
+    "turnPickup": true,
+    "clubhousePickup": true,
+    "amenities": [
+      "Walking friendly",
+      "Practice green",
+      "Community clubhouse"
+    ],
+    "deliveryEstimate": "Open \u00b7 Pickup in 8\u201312 min",
+    "minimumOrder": 6,
+    "featured": true,
+    "active": true,
+    "categories": [
+      "food",
+      "beverages",
+      "gear",
+      "experiences"
+    ],
+    "hours": {
+      "Monday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Tuesday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Wednesday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Thursday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Friday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Saturday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Sunday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      }
+    },
+    "promotions": [],
+    "contact": "partner-c5@example.invalid",
+    "featuredDescription": "Affordable municipal course"
   }
 ]

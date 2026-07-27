@@ -15,7 +15,7 @@ The role switcher is a convenience, not authentication. Every record is fictiona
 
 ## Beta capabilities
 
-Three distinct fictional venues and 30 products power a marketplace home, functional search and filters, reusable course storefront, localStorage cart, demonstration checkout, synchronized tracking/staff queue, golfer profile and rewards, course administration, and platform controls. One course per cart is enforced. Fees, tax, tip, inventory decrement, reward points, order number, and estimated arrival are simulated. Alcohol is not offered.
+Five distinct fictional venues and 40 products power a marketplace home, functional search and filters, reusable course storefront, localStorage cart, demonstration checkout, synchronized tracking/staff queue, golfer profile and rewards, course administration, and platform controls. One course per cart is enforced. Fees, tax, tip, inventory decrement, reward points, order number, and estimated arrival are simulated. Alcohol is not offered.
 
 ## Run the demo
 
@@ -27,6 +27,12 @@ python3 -m http.server 8000
 ```
 
 Choose **Role Demo** in the header and select a view. Use **Reset Demo** there to remove application localStorage and restore packaged records. The dependency-free tests modify and reset demo storage; do not run them while preserving manual demo edits.
+
+## Marketplace experience
+
+The compact Discover view puts course search and nearby participating venues before long-form education. Each card communicates verified status, fictional distance, rating, order availability, fulfillment methods, minimum, and featured offer. Storefronts retain course identity inside the shared marketplace shell. Hash routes such as `#/discover`, `#/course/c1`, `#/cart`, `#/checkout`, and `#/order/o1` normalize to the static SPA without server rewrites.
+
+**Round Mode is a roadmap limitation in this revision:** the current beta has outdoor-sized mobile controls and a persistent cart action, but does not yet offer a dedicated, persisted reduced-content Round Mode. Partner roles remain separated behind the discreet Demo menu; course staff, course administration, and platform administration use role-adapted operational views rather than golfer navigation.
 
 ## Repository structure
 
@@ -42,17 +48,17 @@ Choose **Role Demo** in the header and select a view. Use **Reset Demo** there t
 
 ## Data model
 
-Stable IDs relate products, promotions, reviews, and orders to courses; orders also relate to a user. The single `gg-beta-state-v3` localStorage document includes a schema version and working copies of all JSON collections. `gg-beta-role` stores the role. A version mismatch safely reinitializes the demo. Admin, staff, cart, tracking, rewards, and platform screens read and write through the shared service.
+Stable IDs relate products, promotions, reviews, and orders to courses; orders also relate to a user. The single `gg-beta-state-v4` localStorage document includes a schema version, non-destructive v3-to-v4 baseline migration, and working copies of all JSON collections. `gg-beta-role` stores the role. A version mismatch safely reinitializes the demo. Admin, staff, cart, tracking, rewards, and platform screens read and write through the shared service.
 
 ## Tests and current verification
 
-Open `tests/index.html` under the local server. The suite checks baseline loading, course/product filtering, currency, cart math, multivendor blocking, order creation, tracking synchronization, hours and availability persistence, role persistence, reset, relative test-page assets, and accessibility labels.
+Open `tests/index.html` under the local server. The suite checks baseline loading, course/product filtering, course sorting, five course archetypes, currency, cart math, multivendor blocking, order creation, tracking synchronization, hours and availability persistence, role persistence, reset, relative test-page assets, and accessibility labels.
 
 Automated checks completed for this revision are recorded in the commit/PR summary. Static syntax and URL scans do not replace testing on the complete browser/device matrix.
 
 ### Manual QA checklist
 
-- [ ] At 320, 375, 768, 1024, and 1440 CSS pixels, verify no page-level horizontal overflow.
+- [ ] At 320, 375, 430, 768, 1024, and 1440 CSS pixels, verify no page-level horizontal overflow.
 - [ ] Browse each course; search and select multiple product categories.
 - [ ] Add from another course and verify the clear-and-switch explanation.
 - [ ] Change quantities, fulfillment, simulated location, tip, and submit checkout.
