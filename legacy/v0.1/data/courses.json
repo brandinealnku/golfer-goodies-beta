@@ -1,0 +1,534 @@
+[
+  {
+    "id": "c1",
+    "name": "Evergreen Crest Resort",
+    "slug": "evergreen-crest",
+    "city": "Juniper Falls",
+    "state": "CO",
+    "description": "Elevated resort golf, thoughtful hospitality, and mountain-view delivery.",
+    "image": "gradient-mountain",
+    "rating": 4.9,
+    "reviewCount": 218,
+    "distance": 2.4,
+    "open": true,
+    "delivery": true,
+    "turnPickup": true,
+    "clubhousePickup": true,
+    "amenities": [
+      "GPS carts",
+      "Practice range",
+      "Spa clubhouse"
+    ],
+    "deliveryEstimate": "18\u201325 min",
+    "minimumOrder": 12,
+    "featured": true,
+    "active": true,
+    "categories": [
+      "food",
+      "beverages",
+      "gear"
+    ],
+    "hours": {
+      "Monday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Tuesday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Wednesday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Thursday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Friday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Saturday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Sunday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      }
+    },
+    "promotions": [
+      "pr1"
+    ],
+    "contact": "hello@evergreen.example",
+    "featuredDescription": "A premium alpine round."
+  },
+  {
+    "id": "c2",
+    "name": "Mulligan Meadows",
+    "slug": "mulligan-meadows",
+    "city": "Fairway",
+    "state": "NC",
+    "description": "A welcoming public course with friendly prices and a legendary turn stop.",
+    "image": "gradient-meadow",
+    "rating": 4.6,
+    "reviewCount": 342,
+    "distance": 5.8,
+    "open": true,
+    "delivery": false,
+    "turnPickup": true,
+    "clubhousePickup": true,
+    "amenities": [
+      "Family tees",
+      "Putting green",
+      "Turn stand"
+    ],
+    "deliveryEstimate": "Pickup in 12\u201318 min",
+    "minimumOrder": 8,
+    "featured": true,
+    "active": true,
+    "categories": [
+      "food",
+      "beverages"
+    ],
+    "hours": {
+      "Monday": {
+        "open": "06:30",
+        "close": "20:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Tuesday": {
+        "open": "06:30",
+        "close": "20:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Wednesday": {
+        "open": "06:30",
+        "close": "20:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Thursday": {
+        "open": "06:30",
+        "close": "20:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Friday": {
+        "open": "06:30",
+        "close": "20:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Saturday": {
+        "open": "06:30",
+        "close": "20:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Sunday": {
+        "open": "06:30",
+        "close": "20:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      }
+    },
+    "promotions": [
+      "pr2"
+    ],
+    "contact": "team@mulligan.example",
+    "featuredDescription": "Golf for everyone."
+  },
+  {
+    "id": "c3",
+    "name": "Circuit Links",
+    "slug": "circuit-links",
+    "city": "Nova City",
+    "state": "TX",
+    "description": "Technology-forward urban golf with smart lockers and rapid cart delivery.",
+    "image": "gradient-city",
+    "rating": 4.8,
+    "reviewCount": 156,
+    "distance": 8.1,
+    "open": false,
+    "delivery": true,
+    "turnPickup": false,
+    "clubhousePickup": true,
+    "amenities": [
+      "Smart lockers",
+      "Night range",
+      "EV carts"
+    ],
+    "deliveryEstimate": "15\u201320 min",
+    "minimumOrder": 10,
+    "featured": false,
+    "active": true,
+    "categories": [
+      "beverages",
+      "gear",
+      "services"
+    ],
+    "hours": {
+      "Monday": {
+        "open": "08:00",
+        "close": "22:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Tuesday": {
+        "open": "08:00",
+        "close": "22:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Wednesday": {
+        "open": "08:00",
+        "close": "22:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Thursday": {
+        "open": "08:00",
+        "close": "22:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Friday": {
+        "open": "08:00",
+        "close": "22:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Saturday": {
+        "open": "08:00",
+        "close": "22:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Sunday": {
+        "open": "08:00",
+        "close": "22:00",
+        "closed": false,
+        "delivery": true,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      }
+    },
+    "promotions": [
+      "pr3"
+    ],
+    "contact": "ops@circuit.example",
+    "featuredDescription": "The connected round."
+  },
+  {
+    "id": "c4",
+    "name": "Heritage Oak Club",
+    "slug": "heritage-oak",
+    "city": "Fox Hollow",
+    "state": "VA",
+    "description": "A private-club demonstration pairing attentive service with a calm, classic parkland round.",
+    "image": "gradient-oak",
+    "rating": 4.8,
+    "reviewCount": 164,
+    "distance": 8.2,
+    "open": false,
+    "delivery": false,
+    "turnPickup": true,
+    "clubhousePickup": true,
+    "amenities": [
+      "Caddie service",
+      "Practice range",
+      "Member guest desk"
+    ],
+    "deliveryEstimate": "Closed \u00b7 Opens Tuesday at 8:00 AM",
+    "minimumOrder": 15,
+    "featured": false,
+    "active": true,
+    "categories": [
+      "food",
+      "beverages",
+      "gear",
+      "experiences"
+    ],
+    "hours": {
+      "Monday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Tuesday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Wednesday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Thursday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Friday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Saturday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Sunday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      }
+    },
+    "promotions": [],
+    "contact": "partner-c4@example.invalid",
+    "featuredDescription": "Traditional private club"
+  },
+  {
+    "id": "c5",
+    "name": "Pine Creek Municipal",
+    "slug": "pine-creek-municipal",
+    "city": "Mesa Vista",
+    "state": "AZ",
+    "description": "An affordable community course with quick pickup, practical essentials, and welcoming public play.",
+    "image": "gradient-desert",
+    "rating": 4.5,
+    "reviewCount": 487,
+    "distance": 3.7,
+    "open": true,
+    "delivery": false,
+    "turnPickup": true,
+    "clubhousePickup": true,
+    "amenities": [
+      "Walking friendly",
+      "Practice green",
+      "Community clubhouse"
+    ],
+    "deliveryEstimate": "Open \u00b7 Pickup in 8\u201312 min",
+    "minimumOrder": 6,
+    "featured": true,
+    "active": true,
+    "categories": [
+      "food",
+      "beverages",
+      "gear",
+      "experiences"
+    ],
+    "hours": {
+      "Monday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Tuesday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Wednesday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Thursday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Friday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Saturday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      },
+      "Sunday": {
+        "open": "07:00",
+        "close": "19:00",
+        "closed": false,
+        "delivery": false,
+        "deliveryStart": "08:00",
+        "deliveryEnd": "18:00",
+        "turnPickup": true,
+        "clubhousePickup": true
+      }
+    },
+    "promotions": [],
+    "contact": "partner-c5@example.invalid",
+    "featuredDescription": "Affordable municipal course"
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "r1",
+    "courseId": "c1",
+    "rating": 5,
+    "text": "Delivery arrived before our group reached the tee."
+  },
+  {
+    "id": "r2",
+    "courseId": "c2",
+    "rating": 4,
+    "text": "Easy turn pickup and friendly staff."
+  }
+]
