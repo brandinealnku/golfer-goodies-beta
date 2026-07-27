@@ -29,3 +29,11 @@
 - Keep seed data fictional, deterministic, idempotent, alcohol-free, and represent money as integer cents.
 - Do not add Stripe before its designated payment phase and do not deploy Firebase services without explicit authorization.
 - Never commit secrets, service-account files, private keys, production credentials, or App Check debug tokens.
+
+## Permanent course-context rules
+
+- Never show products without course context or query marketplace-wide products for the golfer ordering flow.
+- Every product must belong to a course; course selection controls product visibility and course verification controls ordering eligibility.
+- Never rely solely on client-side eligibility for connected orders.
+- Never request geolocation automatically on page load; preserve non-location alternatives and do not store continuous location history.
+- Preserve one-course-per-cart behavior.

@@ -1,5 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { EnvironmentBadge } from '../components/ui';
+import { useCourseContext } from '../state/course-context';
+import { CourseContextHeader } from '../features/courses/CourseContextHeader';
 const Nav = ({
   label,
   items,
@@ -36,6 +38,7 @@ const Shell = ({
       <Nav label={`${role} navigation`} items={items} />
     </header>
     <main id="main-content">
+      {role === 'Golfer' && <CourseContextHeader />}
       <Outlet />
     </main>
     <footer>
@@ -43,17 +46,29 @@ const Shell = ({
     </footer>
   </>
 );
-export const GolferLayout = () => (
-  <Shell
-    role="Golfer"
-    items={[
-      ['Discover', '/discover'],
-      ['Order', '/cart'],
-      ['Track', '/order/demo-order'],
-      ['Account', '/account'],
-    ]}
-  />
-);
+export const GolferLayout = () => {
+  const { context } = useCourseContext();
+  return (
+    <Shell
+      role="Golfer"
+      items={
+        context.selectedCourseId
+          ? [
+              ['Course', `/course/${context.selectedCourseId}`],
+              ['Menu', `/course/${context.selectedCourseId}`],
+              ['Cart', '/cart'],
+              ['Track', '/order/demo-order'],
+            ]
+          : [
+              ['Find Course', '/discover'],
+              ['Recent', '/recent'],
+              ['Rewards', '/rewards'],
+              ['Account', '/account'],
+            ]
+      }
+    />
+  );
+};
 export const PartnerLayout = () => (
   <Shell
     role="Partner"

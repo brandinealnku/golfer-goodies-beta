@@ -11,6 +11,10 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 18,
     verified: true,
     description: 'A fictional mountain resort marketplace.',
+    demoCode: 'BIRDIE7',
+    demoQrToken: 'SUMMIT-DEMO-QR',
+    minimumOrderCents: 1200,
+    promotion: 'Demo turn special',
   },
   {
     id: 'meadow-loop',
@@ -23,6 +27,9 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 15,
     verified: true,
     description: 'A welcoming fictional public course.',
+    demoCode: 'TURN9',
+    demoQrToken: 'MEADOW-DEMO-QR',
+    minimumOrderCents: 1000,
   },
   {
     id: 'circuit-links',
@@ -35,6 +42,10 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 12,
     verified: true,
     description: 'A fictional technology-forward urban venue.',
+    demoCode: 'EAGLE18',
+    demoQrToken: 'CIRCUIT-DEMO-QR',
+    minimumOrderCents: 1500,
+    orderingPaused: true,
   },
   {
     id: 'heritage-oaks',
@@ -47,6 +58,9 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 25,
     verified: false,
     description: 'A fictional traditional private club.',
+    demoCode: 'OAKS5',
+    demoQrToken: 'OAKS-DEMO-QR',
+    minimumOrderCents: 1000,
   },
   {
     id: 'cedar-bend-muni',
@@ -59,6 +73,9 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 10,
     verified: false,
     description: 'An affordable fictional municipal course.',
+    demoCode: 'CEDAR3',
+    demoQrToken: 'CEDAR-DEMO-QR',
+    minimumOrderCents: 800,
   },
 ];
 export const demoProducts: Product[] = demoCourses.flatMap((c, i) => [
@@ -70,6 +87,7 @@ export const demoProducts: Product[] = demoCourses.flatMap((c, i) => [
     priceCents: 650 + i * 75,
     available: true,
     preparationMinutes: 8 + i,
+    publiclyVisible: true,
   },
   {
     id: `${c.id}-drink`,
@@ -79,5 +97,12 @@ export const demoProducts: Product[] = demoCourses.flatMap((c, i) => [
     priceCents: 350,
     available: i !== 3,
     preparationMinutes: 4,
+    publiclyVisible: true,
   },
 ]);
+
+const courseIds = new Set(demoCourses.map((course) => course.id));
+for (const product of demoProducts) {
+  if (!courseIds.has(product.courseId))
+    throw new Error(`Invalid demo product course: ${product.id}`);
+}

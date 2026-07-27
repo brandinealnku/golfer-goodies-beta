@@ -4,6 +4,28 @@
 **Current phase:** Phase 3 — Firebase Local Emulator Foundation implemented, execution verification blocked by dependency registry access
 **Release posture:** v0.1 and Firebase-independent demo mode remain preserved. No Firebase service was deployed or connected to production.
 
+## Phase 2.5 — Course context and eligibility UX
+
+Completed in the React demo: course-only discovery, persistent selected-course context, repository-enforced course product scoping, browse-only ordering blocks, a persistent/expiring one-course Active Round, simulated-location confirmation, fictional QR and course-code verification, contextual golfer navigation/header, closed/paused/pickup-only presentations, accessible live announcements, and controlled invalid/empty states. The product UI does not import raw demo data.
+
+Automated coverage includes discovery without products, required repository course IDs, cross-course isolation, browse-only controls, all three demonstration verification paths, invalid codes, one-course rounds, expiration, course changes, contextual navigation/header, announcements, and confirmation that browser geolocation is not called. See the final-results section and current commit history for actual command results.
+
+| Phase 2.5 check              | Actual result                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Formatting                   | Passed: `npm run format:check`.                                                                        |
+| Lint                         | Not runnable: installed dependencies are absent (`@eslint/js` and `typescript-eslint` cannot resolve). |
+| Typecheck                    | Not runnable: React, Firebase, Node, and test type packages are absent.                                |
+| Unit tests                   | Not runnable: `vitest` is absent.                                                                      |
+| Component tests              | Not runnable: `vitest` is absent.                                                                      |
+| Production build             | Not runnable: TypeScript dependencies and Vite are absent.                                             |
+| Browser screenshot/manual QA | Not runnable because the application dependencies are absent.                                          |
+
+Real geolocation, background tracking, secure QR validation, server-side eligibility, authentication, inventory, checkout, and payments remain deferred. Demo verification is explicitly not security.
+
+### Revised Phase 3 data requirements
+
+Any Firestore marketplace design must make course ownership mandatory on every product, expose only public products through a course-scoped repository/query, model course availability and ordering pauses separately from verification, and support server-authoritative, expiring, single-course eligibility. Categories must be course-owned or explicitly shared taxonomy. Connected carts/orders must store one immutable course ID and reject cross-course items. Future server validation must not trust the local Active Round, demo codes, or client clocks; real location must be consent-driven, minimized, never automatic, and retain QR/code alternatives. The Firebase-independent local-demo adapter must remain available.
+
 ## Baseline before Phase 3
 
 | Check                                | Result                                                                           |

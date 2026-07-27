@@ -13,6 +13,7 @@ import { getMarketplaceRepository } from '../../data/marketplace-repository';
 import type { Course } from '../../types/marketplace';
 import { labelize } from '../../utils/format';
 import { EmulatorError } from '../../components/EmulatorError';
+import { formatUsd } from '../../utils/format';
 export const filterCourses = (courses: Course[], query: string) => {
   const q = query.trim().toLowerCase();
   return courses.filter((c) =>
@@ -46,12 +47,12 @@ export function DiscoverPage() {
   );
   return (
     <div className="page">
-      <PageHeader title="Discover course favorites">
-        <Badge>v0.2 beta foundation</Badge>
+      <PageHeader title="Find a participating course">
+        <Badge>Course-first demo</Badge>
       </PageHeader>
       <p>
-        Browse five fictional venues. Marketplace ordering is not implemented in
-        this phase.
+        Choose a fictional course before browsing its menu. Individual products
+        are never shown without course context.
       </p>
       <TextInput
         label="Search courses by name, city, or state"
@@ -90,7 +91,16 @@ export function DiscoverPage() {
                 <dd>{c.fulfillmentMethods.map(labelize).join(', ')}</dd>
                 <dt>Estimate</dt>
                 <dd>{c.estimatedMinutes} minutes</dd>
+                <dt>Minimum order</dt>
+                <dd>{formatUsd(c.minimumOrderCents)}</dd>
+                <dt>Menu summary</dt>
+                <dd>Food, alcohol-free drinks, gear and turn pickup</dd>
               </dl>
+              {c.promotion && (
+                <p>
+                  <strong>{c.promotion}</strong>
+                </p>
+              )}
               <Link className="button" to={`/course/${c.id}`}>
                 View {c.name}
               </Link>

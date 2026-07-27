@@ -41,6 +41,8 @@ export function AppRoutes() {
           ['checkout', 'Checkout'],
           ['order/:orderId', 'Order tracking'],
           ['account', 'Account'],
+          ['recent', 'Recent courses'],
+          ['rewards', 'Rewards'],
           ['demo', 'Demo guide'],
         ].map(([path, title]) => (
           <Route key={path} path={path} element={<P title={title} />} />

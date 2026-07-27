@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import {
   Badge,
   Button,
@@ -8,74 +8,197 @@ import {
   LoadingState,
   PageHeader,
   StatusBadge,
+  TextInput,
 } from '../../components/ui';
 import { getMarketplaceRepository } from '../../data/marketplace-repository';
-import type { Course, Product } from '../../types/marketplace';
+import { useCourseContext } from '../../state/course-context';
+import type {
+  Course,
+  Product,
+  VerificationMethod,
+} from '../../types/marketplace';
 import { formatUsd, labelize } from '../../utils/format';
-import { EmulatorError } from '../../components/EmulatorError';
+
 export function CoursePage() {
   const { courseId = '' } = useParams();
+  const { context, selectCourse, verify } = useCourseContext();
   const [course, setCourse] = useState<Course | null>();
   const [products, setProducts] = useState<Product[]>([]);
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
+  const [code, setCode] = useState('');
+  const [qr, setQr] = useState('');
+  const [message, setMessage] = useState('');
   useEffect(() => {
-    void Promise.all([
-      getMarketplaceRepository().then((repository) =>
-        repository.getCourse(courseId),
-      ),
-      getMarketplaceRepository().then((repository) =>
-        repository.getProducts(courseId),
-      ),
-    ])
-      .then(([c, p]) => {
-        setCourse(c);
-        setProducts(p);
+    let current = true;
+    getMarketplaceRepository()
+      .then(async (repository) => {
+        const selected = await repository.getCourse(courseId);
+        const scoped = selected
+          ? await repository.getProductsForCourse(courseId)
+          : [];
+        if (current) {
+          setCourse(selected);
+          setProducts(scoped);
+          if (selected && context.selectedCourseId !== courseId)
+            selectCourse(courseId);
+        }
       })
-      .catch(() => setError('The local course data could not be loaded.'));
-  }, [courseId, attempt]);
-  if (error)
-    return (
-      <div className="page">
-        <EmulatorError
-          message={error}
-          onRetry={() => {
-            setError('');
-            setCourse(undefined);
-            setAttempt((value) => value + 1);
-          }}
-        />
-      </div>
-    );
+      .catch(() => current && setCourse(null));
+    return () => {
+      current = false;
+    };
+  }, [courseId]); // selection intentionally follows the route
   if (course === undefined) return <LoadingState />;
-  if (course === null)
-    return <ErrorState message="That fictional course was not found." />;
+  if (!course)
+    return (
+      <ErrorState message="That fictional course or its products could not be loaded." />
+    );
+  const active =
+    context.mode === 'active_round' &&
+    context.activeRound.courseId === course.id;
+  const blockedReason =
+    course.availability === 'closed'
+      ? 'This course is closed. Browse the menu or choose another course.'
+      : course.orderingPaused
+        ? 'Ordering is paused. Browse now and try again later.'
+        : '';
+  const complete = (method: VerificationMethod) => {
+    verify(method);
+    setMessage('Demo verification only. No real location was collected.');
+  };
   return (
     <div className="page">
       <PageHeader title={course.name}>
         {course.verified && <Badge>✓ Verified Course</Badge>}
       </PageHeader>
       <p>
-        {course.city}, {course.state}
+        {course.city}, {course.state} ·{' '}
+        <StatusBadge status={course.availability} />
       </p>
       <p>
-        <StatusBadge status={course.availability} /> ·{' '}
-        {course.fulfillmentMethods.map(labelize).join(', ')}
+        <strong>Fulfilled by {course.name}</strong>
       </p>
-      <section className="grid" aria-label="Fictional products">
-        {products.map((p) => (
-          <Card key={p.id}>
-            <Badge>{labelize(p.category)}</Badge>
-            <h2>{p.name}</h2>
-            <p className="price">{formatUsd(p.priceCents)}</p>
+      <dl>
+        <dt>Fulfillment methods</dt>
+        <dd>{course.fulfillmentMethods.map(labelize).join(', ')}</dd>
+        <dt>Estimated fulfillment</dt>
+        <dd>{course.estimatedMinutes} minutes</dd>
+        <dt>Ordering status</dt>
+        <dd>
+          {active
+            ? `Active Round · ${labelize(context.activeRound.verificationMethod)}`
+            : 'Browse only'}
+        </dd>
+      </dl>
+      {context.mode === 'browse' && context.expired && (
+        <div className="alert" role="status">
+          <strong>Active Round expired.</strong> Verify again to order.
+        </div>
+      )}
+      {blockedReason ? (
+        <div className="alert" role="status">
+          {blockedReason} <Link to="/discover">Choose another course</Link>.
+        </div>
+      ) : (
+        !active && (
+          <section className="verification" aria-labelledby="verify-heading">
+            <h2 id="verify-heading">Verify you’re at this course to order</h2>
             <p>
-              {p.available ? 'Available' : 'Unavailable'} · about{' '}
-              {p.preparationMinutes} minutes
+              These methods are demonstrations, not secure location validation.
+              No browser location is requested.
             </p>
-            <Button disabled>Planned for next phase</Button>
-          </Card>
-        ))}
-      </section>
+            <Button onClick={() => complete('simulated_location')}>
+              Confirm demo location
+            </Button>
+            <div className="verification-entry">
+              <TextInput
+                id="demo-qr"
+                label="Demo QR token"
+                value={qr}
+                onChange={(e) => setQr(e.target.value)}
+                aria-describedby="qr-help qr-error"
+              />
+              <small id="qr-help">Fictional token: {course.demoQrToken}</small>
+              <Button
+                onClick={() =>
+                  qr.trim().toUpperCase() === course.demoQrToken
+                    ? complete('demo_qr')
+                    : setMessage(
+                        'Demo QR invalid. Check the token and try again.',
+                      )
+                }
+              >
+                Check demo QR
+              </Button>
+            </div>
+            <div className="verification-entry">
+              <TextInput
+                id="course-code"
+                label="Demo course code"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                aria-describedby="code-help code-error"
+              />
+              <small id="code-help">
+                Fictional demonstration code; it is not authentication.
+              </small>
+              <Button
+                onClick={() =>
+                  code.trim().toUpperCase() === course.demoCode
+                    ? complete('demo_course_code')
+                    : setMessage(
+                        'Demo course code invalid. Check the code and try again.',
+                      )
+                }
+              >
+                Verify demo code
+              </Button>
+            </div>
+          </section>
+        )
+      )}
+      <p
+        aria-live="polite"
+        className={message.includes('invalid') ? 'error-message' : ''}
+      >
+        {message}
+      </p>
+      <h2>Course menu</h2>
+      {products.length === 0 ? (
+        <div className="state">
+          <h3>No products available</h3>
+          <p>Try another participating course.</p>
+          <Link className="button" to="/discover">
+            Change course
+          </Link>
+        </div>
+      ) : (
+        <section className="grid" aria-label={`${course.name} products`}>
+          {products.map((p) => (
+            <Card key={p.id}>
+              <Badge>{labelize(p.category)}</Badge>
+              <h3>{p.name}</h3>
+              <p className="price">{formatUsd(p.priceCents)}</p>
+              <p>
+                {p.available ? 'Available' : 'Products unavailable'} · about{' '}
+                {p.preparationMinutes} minutes
+              </p>
+              <Button disabled={!active || !p.available}>
+                {active
+                  ? p.available
+                    ? 'Add to cart'
+                    : 'Unavailable'
+                  : 'Verify course to order'}
+              </Button>
+              {!active && (
+                <p>
+                  Browse-only mode: verification is required before adding an
+                  item.
+                </p>
+              )}
+            </Card>
+          ))}
+        </section>
+      )}
     </div>
   );
 }
