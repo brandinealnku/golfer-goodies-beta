@@ -4,7 +4,7 @@ import { demoCourses, demoProducts } from './demo-data';
 export interface MarketplaceRepository {
   getCourses(): Promise<Course[]>;
   getCourse(id: string): Promise<Course | null>;
-  getProducts(courseId: string): Promise<Product[]>;
+  getProductsForCourse(courseId: string): Promise<Product[]>;
 }
 export class DemoMarketplaceRepository implements MarketplaceRepository {
   async getCourses() {
@@ -13,8 +13,15 @@ export class DemoMarketplaceRepository implements MarketplaceRepository {
   async getCourse(id: string) {
     return structuredClone(demoCourses.find((c) => c.id === id) ?? null);
   }
-  async getProducts(courseId: string) {
-    return structuredClone(demoProducts.filter((p) => p.courseId === courseId));
+  async getProductsForCourse(courseId: string) {
+    if (!courseId) throw new Error('A course ID is required to load products.');
+    if (!demoCourses.some((course) => course.id === courseId)) return [];
+    const products = demoProducts.filter(
+      (p) => p.courseId === courseId && p.publiclyVisible,
+    );
+    if (products.some((product) => product.courseId !== courseId))
+      throw new Error('Invalid product-course relationship.');
+    return structuredClone(products);
   }
 }
 let selected: Promise<MarketplaceRepository> | undefined;

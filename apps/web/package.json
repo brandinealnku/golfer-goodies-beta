@@ -10,9 +10,11 @@
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "typecheck": "tsc -b --pretty false",
-    "test": "vitest run",
+    "test": "npm run test:vitest && npm run test:contract",
+    "test:vitest": "vitest run src",
     "test:unit": "vitest run src/config src/data src/utils",
-    "test:components": "vitest run src --exclude='src/config/**' --exclude='src/data/**' --exclude='src/utils/**'"
+    "test:components": "vitest run src --exclude='src/config/**' --exclude='src/data/**' --exclude='src/utils/**'",
+    "test:contract": "node --test tests/course-first-contract.test.mjs"
   },
   "dependencies": {
     "react": "19.1.1",

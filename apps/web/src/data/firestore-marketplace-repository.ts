@@ -34,6 +34,11 @@ function courseFromDoc(s: QueryDocumentSnapshot<DocumentData>): Course {
     estimatedMinutes: d.defaultPrepMinutes,
     verified: d.verified,
     description: d.shortDescription,
+    demoCode: '',
+    demoQrToken: '',
+    minimumOrderCents: d.minimumOrderCents ?? 0,
+    promotion: d.promotion,
+    orderingPaused: d.status === 'paused',
   };
 }
 function categoryFromId(value: unknown): Product['category'] {
@@ -62,6 +67,7 @@ function productFromDoc(
     priceCents: d.priceCents,
     available: d.status === 'active',
     preparationMinutes: d.preparationMinutes,
+    publiclyVisible: d.status === 'active',
   };
 }
 export class FirestoreMarketplaceRepository implements MarketplaceRepository {
@@ -82,7 +88,8 @@ export class FirestoreMarketplaceRepository implements MarketplaceRepository {
     if (!snap.exists()) return null;
     return courseFromDoc(snap as QueryDocumentSnapshot<DocumentData>);
   }
-  async getProducts(courseId: string) {
+  async getProductsForCourse(courseId: string) {
+    if (!courseId) throw new Error('A course ID is required to load products.');
     const { firestore } = await getFirebaseServices();
     const snap = await getDocs(
       query(

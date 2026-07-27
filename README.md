@@ -2,6 +2,14 @@
 
 Golfer Goodies is a fictional marketplace demonstration. The unchanged v0.1 beta remains at the repository root and in `legacy/v0.1/`. Phase 3 adds a **local-only Firebase Emulator Suite foundation** to the React/Vite app in `apps/web`; no production Firebase project, deployment, real authentication workflow, real customer/course data, orders, Stripe, or payment processing exists.
 
+## Course-first marketplace (Phase 2.5)
+
+The React demo discovery experience lists participating fictional courses, not products. Selecting a course persists a course context and is the only way to load that course's publicly visible products. The repository contract is course-scoped: `getProductsForCourse(courseId)` enforces the rule before products reach components.
+
+A selected, unverified course is **browse only**: prices, availability, and details are visible, but ordering controls remain blocked with an explanation. Simulated location confirmation, a fictional QR token, or a fictional course code can create a two-hour **Active Round** in local storage. Uncertain and outside-area simulated results direct users to non-location alternatives. This demonstration collects no location and provides no secure verification. An Active Round authorizes only its course, expires safely to browse-only mode, and can be ended by the user. Because no cart exists yet, an Active Round displays an honestly labeled planned-order control rather than pretending an item was added.
+
+The intended cart rule is one course per cart: products must never carry across course changes. The current React demo has no functional cart or checkout, so there are no cart contents to preserve or clear. Closed and paused courses remain browseable but cannot become order-ready. Real geolocation, QR security, server eligibility, inventory reservation, connected ordering, checkout, authentication, and payments are not implemented.
+
 ## Prerequisites
 
 - Node.js 22 and npm 10+

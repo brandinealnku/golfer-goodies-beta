@@ -1,4 +1,11 @@
-import type { Course, Product } from '../types/marketplace';
+import type { Course, Product, ProductCategory } from '../types/marketplace';
+export const sharedProductTaxonomy: readonly ProductCategory[] = [
+  'food',
+  'drink',
+  'gear',
+  'essentials',
+  'service',
+];
 export const demoCourses: Course[] = [
   {
     id: 'summit-pines',
@@ -11,6 +18,11 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 18,
     verified: true,
     description: 'A fictional mountain resort marketplace.',
+    demoCode: 'BIRDIE7',
+    demoQrToken: 'SUMMIT-DEMO-QR',
+    minimumOrderCents: 1200,
+    promotion: 'Demo turn special',
+    demoLocationResult: 'eligible',
   },
   {
     id: 'meadow-loop',
@@ -23,6 +35,10 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 15,
     verified: true,
     description: 'A welcoming fictional public course.',
+    demoCode: 'TURN9',
+    demoQrToken: 'MEADOW-DEMO-QR',
+    minimumOrderCents: 1000,
+    demoLocationResult: 'uncertain',
   },
   {
     id: 'circuit-links',
@@ -35,6 +51,11 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 12,
     verified: true,
     description: 'A fictional technology-forward urban venue.',
+    demoCode: 'EAGLE18',
+    demoQrToken: 'CIRCUIT-DEMO-QR',
+    minimumOrderCents: 1500,
+    orderingPaused: true,
+    demoLocationResult: 'eligible',
   },
   {
     id: 'heritage-oaks',
@@ -47,6 +68,10 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 25,
     verified: false,
     description: 'A fictional traditional private club.',
+    demoCode: 'OAKS5',
+    demoQrToken: 'OAKS-DEMO-QR',
+    minimumOrderCents: 1000,
+    demoLocationResult: 'eligible',
   },
   {
     id: 'cedar-bend-muni',
@@ -59,6 +84,10 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 10,
     verified: false,
     description: 'An affordable fictional municipal course.',
+    demoCode: 'CEDAR3',
+    demoQrToken: 'CEDAR-DEMO-QR',
+    minimumOrderCents: 800,
+    demoLocationResult: 'outside_service_area',
   },
 ];
 export const demoProducts: Product[] = demoCourses.flatMap((c, i) => [
@@ -70,6 +99,7 @@ export const demoProducts: Product[] = demoCourses.flatMap((c, i) => [
     priceCents: 650 + i * 75,
     available: true,
     preparationMinutes: 8 + i,
+    publiclyVisible: true,
   },
   {
     id: `${c.id}-drink`,
@@ -79,5 +109,14 @@ export const demoProducts: Product[] = demoCourses.flatMap((c, i) => [
     priceCents: 350,
     available: i !== 3,
     preparationMinutes: 4,
+    publiclyVisible: true,
   },
 ]);
+
+const courseIds = new Set(demoCourses.map((course) => course.id));
+for (const product of demoProducts) {
+  if (!courseIds.has(product.courseId))
+    throw new Error(`Invalid demo product course: ${product.id}`);
+  if (!sharedProductTaxonomy.includes(product.category))
+    throw new Error(`Invalid demo product category: ${product.id}`);
+}
