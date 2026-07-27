@@ -25,12 +25,20 @@ export function DiscoverPage() {
   const [query, setQuery] = useState('');
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
+    let active = true;
     getMarketplaceRepository()
       .then((repository) => repository.getCourses())
-      .then(setCourses)
-      .catch(() =>
-        setError('The fictional course catalog could not be loaded.'),
-      );
+      .then((nextCourses) => {
+        if (active) setCourses(nextCourses);
+      })
+      .catch(() => {
+        if (active) {
+          setError('The fictional course catalog could not be loaded.');
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, [attempt]);
   const shown = useMemo(
     () => filterCourses(courses ?? [], query),
