@@ -1,123 +1,89 @@
-# Golfer Goodies Beta
+# Golfer Goodies v0.2
 
-**Order the course. Keep playing.**
+Golfer Goodies is a fictional marketplace demonstration. The unchanged v0.1 beta remains at the repository root and in `legacy/v0.1/`. Phase 3 adds a **local-only Firebase Emulator Suite foundation** to the React/Vite app in `apps/web`; no production Firebase project, deployment, real authentication workflow, real customer/course data, orders, Stripe, or payment processing exists.
 
-Golfer Goodies is a static, mobile-first demonstration of a third-party marketplace connecting golfers with participating fictional courses. Food, nonalcoholic drinks, gear, essentials, services, offers, fulfillment, and order operations are represented without pretending that a live commerce system exists.
+## Prerequisites
 
-## Target users and roles
+- Node.js 22 and npm 10+
+- Java 21 (a supported runtime for the Firebase emulators)
+- Firebase CLI installed from the committed `firebase-tools` dependency
 
-- **Golfer:** searches and filters courses, browses storefronts, builds a single-course cart, places and tracks a demo order, and views rewards and history.
-- **Course Admin:** edits a listing, catalog, inventory, availability, hours, delivery settings, promotions, and demonstration analytics.
-- **Course Staff:** operates a tablet-friendly status board, assigns runners, estimates time, rejects orders, and updates fulfillment.
-- **Platform Admin:** reviews applications, changes approval status, features or activates courses, and views simulated GMV and commission.
-
-The role switcher is a convenience, not authentication. Every record is fictional.
-
-## Beta capabilities
-
-Five distinct fictional venues and 40 products power a marketplace home, functional search and filters, reusable course storefront, localStorage cart, demonstration checkout, synchronized tracking/staff queue, golfer profile and rewards, course administration, and platform controls. One course per cart is enforced. Fees, tax, tip, inventory decrement, reward points, order number, and estimated arrival are simulated. Alcohol is not offered.
-
-## Run the demo
-
-Opening `index.html` directly works: the shared data service uses its packaged baseline fallback because browsers generally block `fetch()` for `file:` URLs. For the complete service-worker/PWA experience, serve the repository:
-
-```bash
-python3 -m http.server 8000
-# open http://localhost:8000/
+```text
+npm install
+npm run firebase:verify
 ```
 
-Choose **Role Demo** in the header and select a view. Use **Reset Demo** there to remove application localStorage and restore packaged records. The dependency-free tests modify and reset demo storage; do not run them while preserving manual demo edits.
+The verifier checks Node, Java, and the local CLI and reports actionable errors; it never modifies system Java.
 
-## Marketplace experience
+## Local project and services
 
-The compact Discover view puts course search and nearby participating venues before long-form education. Each card communicates verified status, fictional distance, rating, order availability, fulfillment methods, minimum, and featured offer. Storefronts retain course identity inside the shared marketplace shell. Hash routes such as `#/discover`, `#/course/c1`, `#/cart`, `#/checkout`, and `#/order/o1` normalize to the static SPA without server rewrites.
+The only Firebase identity is fictional `golfer-goodies-local`.
 
-**Round Mode is a roadmap limitation in this revision:** the current beta has outdoor-sized mobile controls and a persistent cart action, but does not yet offer a dedicated, persisted reduced-content Round Mode. Partner roles remain separated behind the discreet Demo menu; course staff, course administration, and platform administration use role-adapted operational views rather than golfer navigation.
+| Emulator       | Port |
+| -------------- | ---: |
+| UI             | 4000 |
+| Hosting        | 5000 |
+| Functions      | 5001 |
+| Firestore      | 8080 |
+| Authentication | 9099 |
+| Storage        | 9199 |
 
-## Repository structure
+No Firebase login or production credential is needed.
 
-- `index.html`, `404.html` — SPA entry and subpath-safe recovery.
-- `assets/css/styles.css` — responsive visual system and reduced-motion handling.
-- `assets/js/app.js` — semantic UI and role workflows.
-- `assets/js/data-service.js` — versioned state, baseline loading, cart, orders, filtering.
-- `assets/js/baseline.js` — file-protocol fallback generated from the demo records.
-- `data/*.json` — stable related course, product, order, user, promotion, application, review, and reward records.
-- `manifest.webmanifest`, `service-worker.js`, `assets/icons/` — install metadata and offline shell.
-- `tests/` — browser-based dependency-free test runner.
-- `.github/workflows/deploy-pages.yml` — official GitHub Pages artifact deployment.
+## Demo mode (Firebase-independent)
 
-## Data model
+```text
+npm run dev:demo
+```
 
-Stable IDs relate products, promotions, reviews, and orders to courses; orders also relate to a user. The single `gg-beta-state-v4` localStorage document includes a schema version, non-destructive v3-to-v4 baseline migration, and working copies of all JSON collections. `gg-beta-role` stores the role. A version mismatch safely reinitializes the demo. Admin, staff, cart, tracking, rewards, and platform screens read and write through the shared service.
+Demo mode uses the in-bundle fictional repository, performs no Firebase initialization, retains hash routes and relative assets, and remains suitable for static GitHub Pages. The root Pages workflow still serves v0.1.
 
-## Tests and current verification
+## Complete local emulator workflow
 
-Open `tests/index.html` under the local server. The suite checks baseline loading, course/product filtering, course sorting, five course archetypes, currency, cart math, multivendor blocking, order creation, tracking synchronization, hours and availability persistence, role persistence, reset, relative test-page assets, and accessibility labels.
+```text
+npm run build
+npm run firebase:emulators
+# in a second terminal
+npm run firebase:seed
+npm --workspace @golfer-goodies/web run dev -- --mode emulator
+```
 
-Automated checks completed for this revision are recorded in the commit/PR summary. Static syntax and URL scans do not replace testing on the complete browser/device matrix.
+Open the web development URL shown by Vite, diagnostics at `#/dev/emulators`, or Emulator UI at `http://127.0.0.1:4000`. Emulator mode connects Auth, Firestore, Functions, and Storage only to loopback. If unavailable, the UI provides a safe error rather than raw Firebase details. Connected mode intentionally reports that it is not configured.
 
-### Manual QA checklist
+## Seed, reset, import, and export
 
-- [ ] At 320, 375, 430, 768, 1024, and 1440 CSS pixels, verify no page-level horizontal overflow.
-- [ ] Browse each course; search and select multiple product categories.
-- [ ] Add from another course and verify the clear-and-switch explanation.
-- [ ] Change quantities, fulfillment, simulated location, tip, and submit checkout.
-- [ ] Change the new order through every staff status and verify tracking after each step.
-- [ ] Edit products and every weekday setting; reload and verify persistence.
-- [ ] Change application/course controls; reload and verify persistence.
-- [ ] Navigate all controls with keyboard only; verify focus, dialog close, labels, and announcements.
-- [ ] Enable reduced motion, zoom to 200%, and test a mobile screen reader.
-- [ ] Test offline after one successful HTTPS/localhost load; verify the offline notice.
-- [ ] Reset and confirm baseline products, hours, role, cart, and orders return.
+```text
+npm run firebase:seed
+npm run firebase:reset
+npm run firebase:export
+firebase emulators:start --project golfer-goodies-local --import emulator-export
+```
 
-## GitHub Pages deployment
+The deterministic scripts are authoritative. They refuse unknown projects, seed eight fictional `example.com` users idempotently, and create five courses, 40 categories, 40 alcohol-free products, and five promotions. Reset clears local Auth/Firestore/Storage and reseeds. Generated exports are ignored and optional. Local-only user credentials are documented in `docs/development/LOCAL_TEST_USERS.md`.
 
-1. Push this repository to GitHub with the default branch named `main` (or update the workflow branch if different).
-2. In **Settings → Pages → Build and deployment → Source**, choose **GitHub Actions**.
-3. Open **Actions**, select **Deploy static beta to Pages**, and run it, or push to `main`.
-4. Wait for both the artifact and deploy steps to pass.
-5. Open the environment URL shown by the deployment job, typically `https://USERNAME.github.io/golfer-goodies-beta/`.
-6. Verify storefront navigation, an order, role switching, the test runner at `/golfer-goodies-beta/tests/`, refresh behavior, and offline reload.
+## Checks
 
-This repository has not been claimed as deployed; a successful GitHub Actions run and URL inspection are required. All application URLs are relative and the service worker derives scope from its own repository-subpath location.
+```text
+npm run format:check
+npm run lint
+npm run typecheck
+npm test
+npm run test:rules
+npm run test:emulators
+npm run test:all
+npm run build
+```
 
-## Accessibility and responsive design
+Rules tests cover public active records, hidden/draft/paused records, immutable marketplace data, self-only allowlisted profiles, privilege escalation denial, image MIME/size/path restrictions, and course/product upload denial. Emulator integration covers local clients, seed status, courses/products, missing records, and the health function. CI uses Node 22, Java 21, the local project ID, and no login or deployment.
 
-The app includes semantic landmarks, a skip link, logical headings, keyboard controls, labeled inputs, native accessible dialog, live status regions, large targets, visible focus, contrast-conscious colors, responsive grids, scroll-contained operations tables/boards, and `prefers-reduced-motion`. These are WCAG-oriented practices, not a certification. Screen-reader and assistive-technology audits remain necessary.
+## Architecture and security
 
-## PWA and install
+React components use `MarketplaceRepository`; only the Firestore adapter queries Firebase. The centralized modular client connects once under emulator mode. Callable second-generation Functions expose safe local diagnostics only. Firestore and Storage rules default to deny. Seed/system writes use the Admin SDK only inside guarded local scripts. See `docs/architecture/FIREBASE_EMULATOR_FOUNDATION.md`.
 
-The manifest uses standalone display, brand colors, and an original SVG icon. The service worker precaches the shell and all JSON with only relative paths. Installation requires HTTPS (GitHub Pages qualifies) or localhost and browser support. A first online visit is necessary before offline use. Direct `file:` use intentionally does not register a service worker.
+The app retains semantic landmarks, keyboard focus, labels, live status, reduced motion, responsive layouts, accessible loading states, and safe error messaging. Manual assistive-technology and viewport QA remains required.
 
-## Privacy and known limitations
+## Troubleshooting and limitations
 
-- All data and roles live in editable localStorage; there is no security, cross-device synchronization, concurrency, recovery, real inventory, or staff notification.
-- Contact fields entered at checkout are attached to the local demonstration order. Use fictional values; Reset Demo removes them.
-- “Use my current location” never invokes geolocation and inserts a labeled fictional value.
-- Payment selectors collect no card number and process nothing. Fees, tax, sales, rewards, reviews, commission, and analytics are illustrative.
-- Time/open labels use demo records rather than the visitor’s timezone and a live scheduling engine.
-- Promotion editing is simplified to creation and persisted activation; catalog product creation uses a safe template.
-- The custom 404 assumes a project Pages URL whose first path segment is the repository name.
-- Browser console, screen-reader, offline, and device-matrix validation should be repeated in release QA.
+Run `npm run firebase:verify` first. A refused seed indicates missing emulator host variables or the wrong project. Port conflicts require stopping the conflicting process; do not change only one client/config value. Build before starting Hosting Emulator. The diagnostics route is a development tool and reveals no tokens or secrets.
 
-## Production roadmap
-
-### Recommended next task: Firebase-backed pilot
-
-Define a security and tenancy model first, then replace local state with Firebase Authentication, Firestore, Cloud Functions, App Check, Emulator Suite tests, audit logging, and per-course security rules. Create separate golfer/course staff/platform claims; migrate stable IDs; implement idempotent order transitions and inventory transactions; add consent, retention, deletion, backups, monitoring, and an explicit local-demo mode. Validate the full model in the Emulator Suite before using production data.
-
-### Stripe Connect
-
-After legal and financial review, onboard course merchants with Stripe Connect, store no card data, create server-side PaymentIntents, use signed webhooks and idempotency, define refunds/disputes/tips/tax/payouts, reconcile orders, and disclose fees. Never put secret keys in this client.
-
-### Mapping and location
-
-Obtain consent; favor coarse/course-relative positions; minimize retention; define hole/cart geofences with course validation; add permission denial and manual fallbacks; evaluate mapping terms, accessibility, safety, and battery impact. Never expose golfer coordinates to unrelated vendors.
-
-### Notifications
-
-Add opt-in push/SMS/email behind trusted server functions, templating, delivery logs, quiet hours, unsubscribe flows, rate limits, escalation, and privacy controls. Staff updates should use realtime subscriptions with ordered, authorized transitions.
-
-### Legal and operations
-
-Before real transactions, address marketplace/vendor agreements, consumer disclosures, privacy laws, PCI scope, tax, refunds, chargebacks, accessibility, insurance, food safety/allergens, delivery liability, worker practices, emergency support, record retention, incident response, and jurisdictional requirements. Alcohol would additionally require market-by-market licensing, permitted inventory and hours, age/identity verification at purchase and handoff, intoxication/refusal training, compliant couriers, restricted-location rules, audit trails, and regulator/counsel approval.
+Phase 3 does not implement sign-in UI, account linking, claims, memberships, privileged course writes, orders, inventory transactions, uploads UI, App Check, notifications, production projects, deployment, Stripe, or payments. Firebase client identifiers are local placeholders, not secrets. Never use the test password outside local emulators.

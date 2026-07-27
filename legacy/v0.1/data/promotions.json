@@ -1,0 +1,39 @@
+[
+  {
+    "id": "pr1",
+    "courseId": "c1",
+    "title": "Back Nine Boost",
+    "description": "Free citrus sparkler with $25 demo order.",
+    "code": "BACK9",
+    "start": "2026-01-01",
+    "end": "2027-12-31",
+    "products": [
+      "p104"
+    ],
+    "active": true
+  },
+  {
+    "id": "pr2",
+    "courseId": "c2",
+    "title": "Twilight Turn",
+    "description": "Save 10% on turn pickup after 4 PM.",
+    "code": "TURN10",
+    "start": "2026-01-01",
+    "end": "2027-12-31",
+    "products": [],
+    "active": true
+  },
+  {
+    "id": "pr3",
+    "courseId": "c3",
+    "title": "Rain Ready",
+    "description": "Demo bundle pricing on weather gear.",
+    "code": "READY",
+    "start": "2026-01-01",
+    "end": "2027-12-31",
+    "products": [
+      "p308"
+    ],
+    "active": true
+  }
+]
