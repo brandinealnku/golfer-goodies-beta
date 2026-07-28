@@ -1,7 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useIdentity } from '../../auth/IdentityContext';
-import { hasCapability, roleLabel } from '../../auth/authorization';
+import type { AuthenticatedUser } from '../../auth/identity';
+import {
+  hasCapability,
+  roleLabel,
+  type CourseMembership,
+} from '../../auth/authorization';
 import {
   allDemoCourseProducts,
   demoCourse,
@@ -73,13 +78,13 @@ export function CourseManagementPage() {
     </Guard>
   );
 }
-function Workspace({
-  courseId,
-  membership,
-  user,
-}: Parameters<Parameters<typeof Guard>[0]['children']>[0] extends never
-  ? never
-  : any) {
+interface WorkspaceProps {
+  courseId: string;
+  membership: CourseMembership;
+  user: AuthenticatedUser;
+}
+
+function Workspace({ courseId, membership, user }: WorkspaceProps) {
   const [revision, setRevision] = useState(0);
   const course = demoCourse(courseId);
   const products = allDemoCourseProducts(courseId);
@@ -257,7 +262,7 @@ function Workspace({
           <h2>Recent changes</h2>
           {audit.length ? (
             <ul>
-              {audit.map((event: any) => (
+              {audit.map((event) => (
                 <li key={event.id}>
                   <strong>{labelize(event.action)}</strong> ·{' '}
                   {event.changedFields.join(', ')}
@@ -284,7 +289,21 @@ function Workspace({
     </div>
   );
 }
-function ProductRow({ product, user, canCatalog, refresh, setMessage }: any) {
+interface ProductRowProps {
+  product: Product;
+  user: AuthenticatedUser;
+  canCatalog: boolean;
+  refresh: () => void;
+  setMessage: (message: string) => void;
+}
+
+function ProductRow({
+  product,
+  user,
+  canCatalog,
+  refresh,
+  setMessage,
+}: ProductRowProps) {
   const [editing, setEditing] = useState(false);
   async function availability() {
     try {

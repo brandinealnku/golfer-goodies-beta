@@ -83,8 +83,7 @@ export class FirestoreMarketplaceRepository implements MarketplaceRepository {
     const snap = await getDocs(
       query(
         collection(firestore, 'courses'),
-        where('status', 'in', ['active', 'sold_out']),
-        where('publiclyVisible', '==', true),
+        where('status', '==', 'active'),
         where('marketplaceVisible', '==', true),
       ),
     );
@@ -102,7 +101,8 @@ export class FirestoreMarketplaceRepository implements MarketplaceRepository {
     const snap = await getDocs(
       query(
         collection(firestore, 'courses', courseId, 'products'),
-        where('status', '==', 'active'),
+        where('status', 'in', ['active', 'sold_out']),
+        where('publiclyVisible', '==', true),
       ),
     );
     return snap.docs.map((s) => productFromDoc(s, courseId));
