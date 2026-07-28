@@ -1,101 +1,199 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { EnvironmentBadge } from '../components/ui';
+import { environment } from '../config/environment';
 import { useCourseContext } from '../state/course-context';
-import { CourseContextHeader } from '../features/courses/CourseContextHeader';
-const Nav = ({
-  label,
-  items,
-}: {
-  label: string;
-  items: [string, string][];
-}) => (
-  <nav aria-label={label}>
-    <ul>
-      {items.map(([name, to]) => (
-        <li key={name}>
-          <NavLink to={to}>{name}</NavLink>
-        </li>
-      ))}
-    </ul>
-  </nav>
+import { useCart } from '../state/cart';
+import { demoCourses } from '../data/demo-data';
+import { formatUsd } from '../utils/format';
+
+const Icon = ({ children }: { children: string }) => (
+  <span aria-hidden="true">{children}</span>
 );
-const Shell = ({
-  role,
-  items,
-}: {
-  role: string;
-  items: [string, string][];
-}) => (
+export function DesktopAppBar() {
+  const { context } = useCourseContext();
+  const { itemCount } = useCart();
+  const course = context.selectedCourseId
+    ? demoCourses.find((c) => c.id === context.selectedCourseId)
+    : undefined;
+  return (
+    <header className="desktop-app-bar">
+      <NavLink className="brand" to="/discover">
+        Golfer Goodies
+      </NavLink>
+      <nav aria-label="Main navigation">
+        <NavLink to={course ? `/course/${course.id}` : '/discover'}>
+          {course ? 'Course' : 'Discover'}
+        </NavLink>
+        <NavLink to="/orders">Orders</NavLink>
+        <NavLink to="/account">Account</NavLink>
+      </nav>
+      <NavLink
+        className="cart-button"
+        to="/cart"
+        aria-label={`Cart, ${itemCount} items`}
+      >
+        Cart <strong>{itemCount}</strong>
+      </NavLink>
+    </header>
+  );
+}
+export function MobileAppBar() {
+  const { context } = useCourseContext();
+  const { itemCount } = useCart();
+  return (
+    <header className="mobile-app-bar">
+      <NavLink className="brand" to="/discover">
+        GG
+      </NavLink>
+      {context.selectedCourseId && (
+        <NavLink
+          className="course-shortcut"
+          to={`/course/${context.selectedCourseId}`}
+        >
+          Your course
+        </NavLink>
+      )}
+      <NavLink
+        className="icon-link"
+        to="/cart"
+        aria-label={`Cart, ${itemCount} items`}
+      >
+        <Icon>▣</Icon>
+        <b>{itemCount}</b>
+      </NavLink>
+      <NavLink className="icon-link" to="/account" aria-label="Account">
+        <Icon>●</Icon>
+      </NavLink>
+    </header>
+  );
+}
+export function MobileBottomNav() {
+  const { context } = useCourseContext();
+  return (
+    <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
+      <NavLink to="/discover">
+        <Icon>⌂</Icon>Home
+      </NavLink>
+      <NavLink
+        to={
+          context.selectedCourseId
+            ? `/course/${context.selectedCourseId}`
+            : '/discover'
+        }
+      >
+        <Icon>⚑</Icon>
+        {context.selectedCourseId ? 'Course' : 'Courses'}
+      </NavLink>
+      <NavLink to="/orders">
+        <Icon>≡</Icon>Orders
+      </NavLink>
+      <NavLink to="/account">
+        <Icon>●</Icon>Account
+      </NavLink>
+    </nav>
+  );
+}
+export function CourseContextBar() {
+  const { context, endRound } = useCourseContext();
+  if (!context.selectedCourseId) return null;
+  const course = demoCourses.find((c) => c.id === context.selectedCourseId);
+  if (!course) return null;
+  return (
+    <aside className="course-context-bar" aria-label="Current course">
+      <strong>
+        {context.mode === 'active_round'
+          ? `Active at ${course.name}`
+          : `${course.name} · Browse only`}
+      </strong>
+      <span>
+        {context.mode === 'active_round'
+          ? 'Up to 2 hours remaining'
+          : 'Start your round to unlock ordering'}
+      </span>
+      {context.mode === 'active_round' && (
+        <button type="button" className="link-button" onClick={endRound}>
+          End round
+        </button>
+      )}
+    </aside>
+  );
+}
+export function FloatingCartBar() {
+  const { itemCount, subtotalCents } = useCart();
+  if (!itemCount) return null;
+  return (
+    <NavLink className="floating-cart" to="/cart">
+      <span>
+        <strong>
+          {itemCount} {itemCount === 1 ? 'item' : 'items'}
+        </strong>
+        <small>{formatUsd(subtotalCents)}</small>
+      </span>
+      <b>View cart →</b>
+    </NavLink>
+  );
+}
+export function ToastRegion() {
+  const cart = useCart();
+  const course = useCourseContext();
+  return (
+    <div
+      className="sr-only"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {cart.announcement || course.announcement}
+    </div>
+  );
+}
+export function OfflineBanner() {
+  return (
+    <div className="offline-banner" hidden={navigator.onLine} role="status">
+      You’re offline. Saved demo browsing and orders remain available.
+    </div>
+  );
+}
+export function DemoIndicator() {
+  return environment.mode !== 'connected' ? (
+    <span className="demo-indicator">Demo · no real orders</span>
+  ) : null;
+}
+export function AppShell() {
+  return (
+    <>
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
+      <OfflineBanner />
+      <DesktopAppBar />
+      <MobileAppBar />
+      <DemoIndicator />
+      <CourseContextBar />
+      <main id="main-content">
+        <Outlet />
+      </main>
+      <FloatingCartBar />
+      <MobileBottomNav />
+      <ToastRegion />
+      <footer>
+        <p>Local demonstration only · No payment will be charged.</p>
+      </footer>
+    </>
+  );
+}
+export const GolferLayout = AppShell;
+const Workspace = ({ name }: { name: string }) => (
   <>
-    <a className="skip-link" href="#main-content">
-      Skip to main content
-    </a>
     <header className="site-header">
       <a className="brand" href="#/discover">
         Golfer Goodies
       </a>
-      <EnvironmentBadge />
-      <Nav label={`${role} navigation`} items={items} />
+      <strong>{name}</strong>
     </header>
     <main id="main-content">
-      {role === 'Golfer' && <CourseContextHeader />}
       <Outlet />
     </main>
-    <footer>
-      <p>Fictional demo data. No orders or payments are processed.</p>
-    </footer>
   </>
 );
-export const GolferLayout = () => {
-  const { context } = useCourseContext();
-  return (
-    <Shell
-      role="Golfer"
-      items={
-        context.selectedCourseId
-          ? [
-              ['Course', `/course/${context.selectedCourseId}`],
-              ['Menu', `/course/${context.selectedCourseId}`],
-              ['Cart', '/cart'],
-              ['Track', '/order/demo-order'],
-            ]
-          : [
-              ['Find Course', '/discover'],
-              ['Recent', '/recent'],
-              ['Rewards', '/rewards'],
-              ['Account', '/account'],
-            ]
-      }
-    />
-  );
-};
-export const PartnerLayout = () => (
-  <Shell
-    role="Partner"
-    items={[
-      ['Overview', '/partner'],
-      ['Orders', '/partner/orders'],
-      ['Storefront', '/partner/storefront'],
-      ['Menu', '/partner/menu'],
-      ['Fulfillment', '/partner/fulfillment'],
-      ['Promotions', '/partner/promotions'],
-      ['Analytics', '/partner/analytics'],
-      ['Team', '/partner/team'],
-      ['Settings', '/partner/settings'],
-    ]}
-  />
-);
-export const PlatformLayout = () => (
-  <Shell
-    role="Platform"
-    items={[
-      ['Marketplace', '/platform'],
-      ['Courses', '/platform/courses'],
-      ['Applications', '/platform/applications'],
-      ['Promotions', '/platform/promotions'],
-      ['Support', '/platform/support'],
-      ['Reports', '/platform/reports'],
-      ['Settings', '/platform/settings'],
-    ]}
-  />
-);
+export const PartnerLayout = () => <Workspace name="Partner workspace" />;
+export const PlatformLayout = () => <Workspace name="Platform workspace" />;

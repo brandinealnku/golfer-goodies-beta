@@ -85,3 +85,7 @@ Phase 3 is **implemented but not verified complete**. Do not claim the emulators
 Implemented a typed course-discovery boundary, fictional demo and deterministic emulator providers, a server-mediated Google Places provider, provider-ID marketplace matching, intentional one-time location UX, manual fallback, external-course/request demonstration, accessible status messaging, and provider attribution. Connected discovery remains configuration-dependent; availability requests are not production submissions. No authentication, claiming, cart, checkout, orders, inventory, payments, or live map was added.
 
 Recommended next phase: **Phase 4B: Authentication, Guest Identity, and Account Linking**.
+
+## Phase 4A.2 — Product Experience Reset
+
+Implemented a consumer-facing responsive shell, visual discovery and storefront, progressive Active Round verification, product-detail sheet, versioned one-course cart, deterministic no-payment checkout, and local demo order tracking. Demo ordering is intentionally browser-local in every mode; connected discovery does not imply connected fulfillment.

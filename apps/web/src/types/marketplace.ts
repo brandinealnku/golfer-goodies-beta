@@ -71,6 +71,19 @@ export interface Course {
   promotion?: string;
   orderingPaused?: boolean;
   demoLocationResult?: 'eligible' | 'uncertain' | 'outside_service_area';
+  image: string;
+  imageAlt: string;
+}
+export interface ProductModifierOption {
+  id: string;
+  name: string;
+  priceCents: number;
+}
+export interface ProductModifierGroup {
+  id: string;
+  name: string;
+  required?: boolean;
+  options: ProductModifierOption[];
 }
 export interface Product {
   id: string;
@@ -81,6 +94,57 @@ export interface Product {
   available: boolean;
   preparationMinutes: number;
   publiclyVisible: boolean;
+  image: string;
+  imageAlt: string;
+  description: string;
+  tags: string[];
+  featured?: boolean;
+  popular?: boolean;
+  modifiers?: ProductModifierGroup[];
+}
+
+export interface CartItem {
+  id: string;
+  productId: string;
+  name: string;
+  unitPriceCents: number;
+  quantity: number;
+  image: string;
+  selectedModifiers: ProductModifierOption[];
+  instructions: string;
+}
+export interface Cart {
+  version: 1;
+  courseId: string;
+  items: CartItem[];
+  updatedAt: string;
+}
+export type DemoOrderStatus =
+  | 'received'
+  | 'preparing'
+  | 'ready'
+  | 'out_for_delivery'
+  | 'completed';
+export interface OrderTotals {
+  subtotalCents: number;
+  serviceFeeCents: number;
+  taxCents: number;
+  deliveryFeeCents: number;
+  totalCents: number;
+}
+export interface DemoOrder {
+  version: 1;
+  id: string;
+  orderNumber: string;
+  courseId: string;
+  courseName: string;
+  items: CartItem[];
+  fulfillment: FulfillmentMethod;
+  fulfillmentDetails: string;
+  totals: OrderTotals;
+  status: DemoOrderStatus;
+  placedAt: string;
+  estimatedReadyAt: string;
 }
 export interface Promotion {
   id: string;

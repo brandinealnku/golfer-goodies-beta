@@ -39,6 +39,8 @@ function courseFromDoc(s: QueryDocumentSnapshot<DocumentData>): Course {
     minimumOrderCents: d.minimumOrderCents ?? 0,
     promotion: d.promotion,
     orderingPaused: d.status === 'paused',
+    image: d.image ?? 'images/demo/courses/cedar-bend.svg',
+    imageAlt: d.imageAlt ?? `${d.name} golf course`,
   };
 }
 function categoryFromId(value: unknown): Product['category'] {
@@ -68,6 +70,10 @@ function productFromDoc(
     available: d.status === 'active',
     preparationMinutes: d.preparationMinutes,
     publiclyVisible: d.status === 'active',
+    image: d.image ?? 'images/demo/products/trail-mix.svg',
+    imageAlt: d.imageAlt ?? `${d.name}, course item`,
+    description: d.shortDescription ?? 'Available from this course storefront.',
+    tags: Array.isArray(d.tags) ? d.tags : [],
   };
 }
 export class FirestoreMarketplaceRepository implements MarketplaceRepository {

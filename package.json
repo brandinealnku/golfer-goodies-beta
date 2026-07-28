@@ -23,6 +23,7 @@
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm --workspace @golfer-goodies/web test",
+    "test:browser": "playwright test",
     "test:rules": "firebase emulators:exec --only firestore,storage --project golfer-goodies-local \"npm run test:rules:run\"",
     "test:rules:run": "vitest run tests/rules",
     "test:emulators": "npm --workspace @golfer-goodies/functions run build && firebase emulators:exec --only auth,firestore,functions,storage --project golfer-goodies-local \"node scripts/seed-emulators.mjs && vitest run tests/emulators\"",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "3.0.3",
+    "@playwright/test": "1.55.0",
     "firebase-tools": "14.15.2",
     "prettier": "3.6.2",
     "vitest": "3.2.4"

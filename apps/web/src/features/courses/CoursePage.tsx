@@ -1,282 +1,765 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import {
-  Badge,
-  Button,
-  Card,
-  ErrorState,
-  LoadingState,
-  PageHeader,
-  StatusBadge,
-  TextInput,
-} from '../../components/ui';
+import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getMarketplaceRepository } from '../../data/marketplace-repository';
 import { useCourseContext } from '../../state/course-context';
+import { useCart } from '../../state/cart';
 import type {
   Course,
-  CourseEligibility,
   Product,
+  ProductCategory,
+  ProductModifierOption,
   VerificationMethod,
 } from '../../types/marketplace';
 import { formatUsd, labelize } from '../../utils/format';
+import { ModalOverlay } from '../../components/ModalOverlay';
 
-type NotEligible = Extract<CourseEligibility, { status: 'not_eligible' }>;
-export function getCourseRestriction(
-  course: Course,
-  expired: boolean,
-): NotEligible | undefined {
+export function getCourseRestriction(course: Course, expired: boolean) {
   if (course.availability === 'closed')
-    return { status: 'not_eligible', reason: 'course_closed' };
+    return {
+      status: 'not_eligible' as const,
+      reason: 'course_closed' as const,
+    };
   if (course.orderingPaused)
-    return { status: 'not_eligible', reason: 'ordering_paused' };
+    return {
+      status: 'not_eligible' as const,
+      reason: 'ordering_paused' as const,
+    };
   if (expired)
-    return { status: 'not_eligible', reason: 'verification_expired' };
+    return {
+      status: 'not_eligible' as const,
+      reason: 'verification_expired' as const,
+    };
 }
-
-const restrictionMessage: Record<NotEligible['reason'], string> = {
-  outside_service_area: 'Outside this course’s service area.',
-  course_closed:
-    'This course is closed. Browse the menu or choose another course.',
-  ordering_paused: 'Ordering is paused. Browse now and try again later.',
-  verification_expired: 'Your Active Round expired. Verify again to order.',
-};
-
+export function QuantityStepper({
+  value,
+  onChange,
+  name,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+  name: string;
+}) {
+  return (
+    <div className="quantity-stepper">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(1, value - 1))}
+        aria-label={`Decrease ${name} quantity`}
+      >
+        −
+      </button>
+      <output aria-live="polite">{value}</output>
+      <button
+        type="button"
+        onClick={() => onChange(value + 1)}
+        aria-label={`Increase ${name} quantity`}
+      >
+        +
+      </button>
+    </div>
+  );
+}
+class OverlayErrorBoundary extends Component<
+  { children: ReactNode; label: string; onRetry: () => void },
+  { error: boolean }
+> {
+  state = { error: false };
+  static getDerivedStateFromError() {
+    return { error: true };
+  }
+  componentDidCatch(error: Error) {
+    if (import.meta.env.DEV) console.error('Overlay rendering failed', error);
+  }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <div className="page overlay-error" role="alert">
+        <h2>We couldn’t open {this.props.label}</h2>
+        <p>The course page is still available. Try opening it again.</p>
+        <button
+          type="button"
+          className="button"
+          onClick={() => {
+            this.setState({ error: false });
+            this.props.onRetry();
+          }}
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+}
 export function CoursePage() {
   const { courseId = '' } = useParams();
+  const navigate = useNavigate();
   const { context, selectCourse, verify } = useCourseContext();
+  const cart = useCart();
   const [course, setCourse] = useState<Course | null>();
   const [products, setProducts] = useState<Product[]>([]);
-  const [code, setCode] = useState('');
-  const [qr, setQr] = useState('');
-  const [message, setMessage] = useState('');
-  const [locationEligibility, setLocationEligibility] =
-    useState<CourseEligibility>();
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null,
+  );
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [intentProductId, setIntentProductId] = useState<string | null>(null);
+  const [changePending, setChangePending] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<
+    ProductCategory | 'all'
+  >('all');
+  const productButtons = useRef(new Map<string, HTMLButtonElement>());
   useEffect(() => {
-    let current = true;
+    let live = true;
     getMarketplaceRepository()
-      .then(async (repository) => {
-        const selected = await repository.getCourse(courseId);
-        const scoped = selected
-          ? await repository.getProductsForCourse(courseId)
-          : [];
-        if (current) {
-          setCourse(selected);
-          setProducts(scoped);
-          setMessage('');
-          setLocationEligibility(undefined);
-          if (selected && context.selectedCourseId !== courseId)
-            selectCourse(courseId);
+      .then(async (r) => {
+        const c = await r.getCourse(courseId);
+        const p = c ? await r.getProductsForCourse(courseId) : [];
+        if (live) {
+          setCourse(c);
+          setProducts(p);
+          if (c && context.selectedCourseId !== courseId) {
+            if (cart.cart && cart.cart.courseId !== courseId && cart.itemCount)
+              setChangePending(true);
+            else selectCourse(courseId);
+          }
         }
       })
-      .catch(() => current && setCourse(null));
+      .catch(() => live && setCourse(null));
     return () => {
-      current = false;
+      live = false;
     };
-  }, [courseId, context.selectedCourseId, selectCourse]);
-  if (course === undefined || (course && course.id !== courseId))
-    return <LoadingState />;
+  }, [
+    courseId,
+    context.selectedCourseId,
+    selectCourse,
+    cart.cart,
+    cart.itemCount,
+  ]);
+  useEffect(() => {
+    setSelectedProductId(null);
+    setIntentProductId(null);
+    setVerifyOpen(false);
+    setSelectedCategory('all');
+  }, [courseId]);
+  useEffect(() => {
+    if (
+      selectedCategory !== 'all' &&
+      !products.some((product) => product.category === selectedCategory)
+    )
+      setSelectedCategory('all');
+  }, [products, selectedCategory]);
+  if (course === undefined)
+    return (
+      <div className="page skeleton" role="status">
+        Preparing the clubhouse…
+      </div>
+    );
   if (!course)
     return (
-      <ErrorState message="That fictional course or its products could not be loaded." />
+      <div className="page">
+        <h1>Course unavailable</h1>
+        <Link className="button" to="/discover">
+          Find another course
+        </Link>
+      </div>
     );
   const active =
     context.mode === 'active_round' &&
     context.activeRound.courseId === course.id;
-  const restriction = getCourseRestriction(
-    course,
-    context.mode === 'browse' && Boolean(context.expired),
+  const blocked = course.availability === 'closed' || course.orderingPaused;
+  const categories = [...new Set(products.map((product) => product.category))];
+  const categoryIsAvailable =
+    selectedCategory === 'all' || categories.includes(selectedCategory);
+  const effectiveCategory = categoryIsAvailable ? selectedCategory : 'all';
+  const displayedCategories =
+    effectiveCategory === 'all' ? categories : [effectiveCategory];
+  const displayedProducts =
+    effectiveCategory === 'all'
+      ? products
+      : products.filter((product) => product.category === effectiveCategory);
+  const selectedProduct = products.find(
+    (p) => p.id === selectedProductId && p.courseId === courseId,
   );
-  const complete = (method: VerificationMethod) => {
-    verify(method);
-    setMessage('Demo verification only. No real location was collected.');
-  };
-  const confirmDemoLocation = () => {
-    if (course.demoLocationResult === 'uncertain') {
-      setLocationEligibility({
-        status: 'uncertain',
-        reason: 'low_location_accuracy',
-        alternatives: ['demo_qr', 'demo_course_code'],
-      });
-      setMessage(
-        'Demo verification is uncertain. No real location was collected.',
-      );
-      return;
-    }
-    if (course.demoLocationResult === 'outside_service_area') {
-      setLocationEligibility({
-        status: 'not_eligible',
-        reason: 'outside_service_area',
-      });
-      setMessage('Demo result: outside this course’s service area.');
-      return;
-    }
-    complete('simulated_location');
+  const returnFocus = selectedProductId
+    ? productButtons.current.get(selectedProductId)
+    : intentProductId
+      ? productButtons.current.get(intentProductId)
+      : null;
+  const openProduct = (productId: string) => setSelectedProductId(productId);
+  const requireRound = (productId?: string) => {
+    setIntentProductId(productId ?? null);
+    setSelectedProductId(null);
+    setVerifyOpen(true);
   };
   return (
-    <div className="page">
-      <PageHeader title={course.name}>
-        {course.verified && <Badge>✓ Verified Course</Badge>}
-      </PageHeader>
-      <p>
-        {course.city}, {course.state} ·{' '}
-        <StatusBadge status={course.availability} />
-      </p>
-      <p>
-        <strong>Fulfilled by {course.name}</strong>
-      </p>
-      <dl>
-        <dt>Fulfillment methods</dt>
-        <dd>{course.fulfillmentMethods.map(labelize).join(', ')}</dd>
-        <dt>Estimated fulfillment</dt>
-        <dd>{course.estimatedMinutes} minutes</dd>
-        <dt>Ordering status</dt>
-        <dd>
-          {active
-            ? `Active Round · ${labelize(context.activeRound.verificationMethod)}`
-            : 'Browse only'}
-        </dd>
-      </dl>
-      {course.fulfillmentMethods.length === 1 &&
-        course.fulfillmentMethods[0] === 'pickup' && (
-          <div className="alert" role="status">
-            <strong>Pickup-only availability.</strong> On-course delivery is not
-            offered here. Browse the pickup menu or choose another course.
-          </div>
+    <div className="storefront">
+      <section className="course-hero">
+        <img src={course.image} alt={course.imageAlt} />
+        <div>
+          <span
+            className={`availability ${blocked ? 'unavailable' : 'available'}`}
+          >
+            {course.orderingPaused
+              ? 'Ordering paused'
+              : course.availability === 'closed'
+                ? 'Closed'
+                : 'Open for demo ordering'}
+          </span>
+          <h1>{course.name}</h1>
+          <p>
+            {course.city}, {course.state} · {course.description}
+          </p>
+          <p>
+            <strong>
+              {course.fulfillmentMethods.map(labelize).join(' · ')}
+            </strong>{' '}
+            · About {course.estimatedMinutes} min
+          </p>
+        </div>
+      </section>
+      <div className="round-banner">
+        <div>
+          <strong>
+            {active
+              ? `Active at ${course.name}`
+              : `You’re browsing ${course.name}`}
+          </strong>
+          <span>
+            {active
+              ? 'Ordering unlocked for this round.'
+              : 'Start your round to unlock ordering.'}
+          </span>
+        </div>
+        {!active && !blocked && (
+          <button
+            type="button"
+            className="button"
+            onClick={() => requireRound()}
+          >
+            Start round
+          </button>
         )}
-      {restriction?.reason === 'verification_expired' && (
-        <div className="alert" role="status">
-          <strong>Active Round expired.</strong>{' '}
-          {restrictionMessage.verification_expired}
+        <Link className="button secondary" to="/discover">
+          Change course
+        </Link>
+      </div>
+      {blocked && (
+        <div className="page">
+          <div className="alert" role="status">
+            <strong>
+              {course.orderingPaused
+                ? 'Ordering is taking a short pause.'
+                : 'The clubhouse is closed.'}
+            </strong>{' '}
+            You can browse the menu, but items cannot be added right now.
+          </div>
         </div>
       )}
-      {restriction && restriction.reason !== 'verification_expired' ? (
-        <div className="alert" role="status">
-          {restrictionMessage[restriction.reason]}{' '}
-          <Link to="/discover">Choose another course</Link>.
+      <nav className="category-nav" aria-label="Menu categories">
+        {(['all', ...categories] as const).map((category) => {
+          const selected = effectiveCategory === category;
+          const label = category === 'all' ? 'All' : labelize(category);
+          return (
+            <button
+              key={category}
+              type="button"
+              aria-label={`${label} products`}
+              aria-pressed={selected}
+              onClick={() => setSelectedCategory(category)}
+            >
+              <span className="category-selected-indicator" aria-hidden="true">
+                {selected ? '✓' : ''}
+              </span>
+              {label}
+            </button>
+          );
+        })}
+      </nav>
+      <div className="page menu">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">Your on-course concierge</span>
+            <h2>
+              {effectiveCategory === 'all'
+                ? 'Clubhouse favorites'
+                : `${labelize(effectiveCategory)} at ${course.name}`}
+            </h2>
+          </div>
+          <p>
+            {effectiveCategory === 'all'
+              ? 'Food, refreshments, and round-saving essentials.'
+              : `Showing only ${labelize(effectiveCategory).toLowerCase()} products from this course.`}
+          </p>
         </div>
-      ) : (
-        !active && (
-          <section className="verification" aria-labelledby="verify-heading">
-            <h2 id="verify-heading">Verify you’re at this course to order</h2>
-            <p>
-              These methods are demonstrations, not secure location validation.
-              No browser location is requested.
-            </p>
-            <Button onClick={confirmDemoLocation}>Confirm demo location</Button>
-            {locationEligibility?.status === 'uncertain' && (
-              <div className="alert" role="status">
-                <strong>Verification uncertain.</strong> Location accuracy is
-                low in this simulation. Use the demo QR or course code instead.
+        {displayedProducts.length === 0 ? (
+          <div className="category-empty state" role="status">
+            <h3>
+              {effectiveCategory === 'all'
+                ? 'No products available right now'
+                : `No ${labelize(effectiveCategory).toLowerCase()} items right now`}
+            </h3>
+            <p>Explore the complete course menu for another option.</p>
+            <button
+              type="button"
+              className="button"
+              onClick={() => setSelectedCategory('all')}
+            >
+              View all products
+            </button>
+          </div>
+        ) : (
+          displayedCategories.map((category) => (
+            <section id={`category-${category}`} key={category}>
+              <h2>{labelize(category)}</h2>
+              <div className="product-grid">
+                {displayedProducts
+                  .filter((p) => p.category === category)
+                  .map((p) => (
+                    <article className="product-card" key={p.id}>
+                      <button
+                        type="button"
+                        className="product-open"
+                        data-product-id={p.id}
+                        ref={(node) => {
+                          if (node) productButtons.current.set(p.id, node);
+                          else productButtons.current.delete(p.id);
+                        }}
+                        onClick={() => openProduct(p.id)}
+                        aria-label={`View ${p.name} details`}
+                      >
+                        <img src={p.image} alt={p.imageAlt} loading="lazy" />
+                        <span>{p.popular ? 'Popular' : ''}</span>
+                        <h3>{p.name}</h3>
+                        <p>{p.description}</p>
+                        <strong>{formatUsd(p.priceCents)}</strong>
+                        <span
+                          className="product-card-action"
+                          aria-hidden="true"
+                        >
+                          {active && !blocked ? 'View and add' : 'View details'}
+                          {' →'}
+                        </span>
+                      </button>
+                    </article>
+                  ))}
               </div>
-            )}
-            {locationEligibility?.status === 'not_eligible' && (
-              <div className="alert" role="status">
-                <strong>Outside service area.</strong> Continue browsing, use a
-                non-location demo method, or{' '}
-                <Link to="/discover">choose another course</Link>.
-              </div>
-            )}
-            <div className="verification-entry">
-              <TextInput
-                id="demo-qr"
-                label="Demo QR token"
-                value={qr}
-                onChange={(e) => setQr(e.target.value)}
-                aria-describedby={
-                  message.startsWith('Demo QR invalid')
-                    ? 'qr-help verification-message'
-                    : 'qr-help'
-                }
-                aria-invalid={message.startsWith('Demo QR invalid')}
-              />
-              <small id="qr-help">Fictional token: {course.demoQrToken}</small>
-              <Button
-                onClick={() =>
-                  qr.trim().toUpperCase() === course.demoQrToken
-                    ? complete('demo_qr')
-                    : setMessage(
-                        'Demo QR invalid. Check the token and try again.',
-                      )
-                }
-              >
-                Check demo QR
-              </Button>
-            </div>
-            <div className="verification-entry">
-              <TextInput
-                id="course-code"
-                label="Demo course code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                aria-describedby={
-                  message.startsWith('Demo course code invalid')
-                    ? 'code-help verification-message'
-                    : 'code-help'
-                }
-                aria-invalid={message.startsWith('Demo course code invalid')}
-              />
-              <small id="code-help">
-                Fictional demonstration code; it is not authentication.
-              </small>
-              <Button
-                onClick={() =>
-                  code.trim().toUpperCase() === course.demoCode
-                    ? complete('demo_course_code')
-                    : setMessage(
-                        'Demo course code invalid. Check the code and try again.',
-                      )
-                }
-              >
-                Verify demo code
-              </Button>
-            </div>
-          </section>
-        )
+            </section>
+          ))
+        )}
+      </div>
+      {selectedProduct && (
+        <OverlayErrorBoundary
+          key={selectedProduct.id}
+          label="product details"
+          onRetry={() => setSelectedProductId(selectedProduct.id)}
+        >
+          <ProductDetailSheet
+            product={selectedProduct}
+            active={active && !blocked}
+            returnFocus={returnFocus}
+            onClose={() => setSelectedProductId(null)}
+            onRequireRound={() => requireRound(selectedProduct.id)}
+            onAdd={(q, m, i) => {
+              cart.add(course.id, selectedProduct, q, m, i);
+              setSelectedProductId(null);
+            }}
+          />
+        </OverlayErrorBoundary>
       )}
-      <p
-        id="verification-message"
-        aria-live="polite"
-        className={message.includes('invalid') ? 'error-message' : ''}
-      >
-        {message}
-      </p>
-      <h2>Course menu</h2>
-      {products.length === 0 ? (
-        <div className="state">
-          <h3>No products available</h3>
-          <p>Try another participating course.</p>
-          <Link className="button" to="/discover">
-            Change course
-          </Link>
-        </div>
-      ) : (
-        <section className="grid" aria-label={`${course.name} products`}>
-          {products.map((p) => (
-            <Card key={p.id}>
-              <Badge>{labelize(p.category)}</Badge>
-              <h3>{p.name}</h3>
-              <p className="price">{formatUsd(p.priceCents)}</p>
-              <p>
-                {p.available ? 'Available' : 'Products unavailable'} · about{' '}
-                {p.preparationMinutes} minutes
-              </p>
-              <Button disabled>
-                {active
-                  ? p.available
-                    ? 'Ordering planned — not yet available'
-                    : 'Unavailable'
-                  : 'Verify course to order'}
-              </Button>
-              {!active && (
-                <p>
-                  Browse-only mode: verification is required before adding an
-                  item.
-                </p>
-              )}
-            </Card>
-          ))}
-        </section>
+      {verifyOpen && (
+        <OverlayErrorBoundary
+          key={`verification-${course.id}`}
+          label="round verification"
+          onRetry={() => setVerifyOpen(true)}
+        >
+          <RoundVerificationSheet
+            course={course}
+            returnFocus={returnFocus}
+            onClose={() => {
+              setVerifyOpen(false);
+              setIntentProductId(null);
+            }}
+            onVerified={(method) => {
+              verify(method);
+              setVerifyOpen(false);
+              if (intentProductId) setSelectedProductId(intentProductId);
+              setIntentProductId(null);
+            }}
+          />
+        </OverlayErrorBoundary>
+      )}
+      {changePending && (
+        <CourseChangeDialog
+          currentName={
+            cart.cart
+              ? [
+                  'summit-pines',
+                  'meadow-loop',
+                  'circuit-links',
+                  'heritage-oaks',
+                  'cedar-bend',
+                ].includes(cart.cart.courseId)
+                ? 'your current course'
+                : 'current course'
+              : 'current course'
+          }
+          target={course.name}
+          onKeep={() => navigate(`/course/${cart.cart?.courseId}`)}
+          onChange={() => {
+            cart.clear();
+            selectCourse(course.id);
+            setChangePending(false);
+          }}
+        />
       )}
     </div>
+  );
+}
+function ProductDetailSheet({
+  product,
+  active,
+  onClose,
+  onRequireRound,
+  onAdd,
+  returnFocus,
+}: {
+  product: Product;
+  active: boolean;
+  onClose: () => void;
+  onRequireRound: () => void;
+  onAdd: (q: number, m: ProductModifierOption[], i: string) => void;
+  returnFocus?: HTMLElement | null;
+}) {
+  const [quantity, setQuantity] = useState(1);
+  const [selected, setSelected] = useState<ProductModifierOption[]>([]);
+  const [instructions, setInstructions] = useState('');
+  const firstIncompleteRef = useRef<HTMLFieldSetElement>(null);
+  const total =
+    (product.priceCents + selected.reduce((n, o) => n + o.priceCents, 0)) *
+    quantity;
+  const incompleteRequiredGroup = product.modifiers?.find(
+    (group) =>
+      active &&
+      group.required &&
+      !group.options.some((option) =>
+        selected.some((selection) => selection.id === option.id),
+      ),
+  );
+  const addDescriptionIds = [
+    !product.available ? 'product-unavailable-message' : '',
+    incompleteRequiredGroup
+      ? `modifier-${incompleteRequiredGroup.id}-requirement`
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const attemptAdd = () => {
+    if (!product.available) return;
+    if (incompleteRequiredGroup) {
+      firstIncompleteRef.current?.focus();
+      return;
+    }
+    onAdd(quantity, selected, instructions);
+  };
+  return (
+    <ModalOverlay
+      className="product-sheet"
+      labelledBy="product-title"
+      onClose={onClose}
+      returnFocus={returnFocus}
+      dataAttributes={{
+        'data-product-sheet': '',
+        'data-product-id': product.id,
+      }}
+    >
+      <button
+        type="button"
+        className="sheet-close"
+        onClick={onClose}
+        aria-label="Close product details"
+      >
+        ×
+      </button>
+      <img src={product.image} alt={product.imageAlt} />
+      <div className="sheet-content">
+        <span className="eyebrow">{labelize(product.category)}</span>
+        <h2 id="product-title">{product.name}</h2>
+        <p>{product.description}</p>
+        <div className="chips">
+          {product.tags.map((t) => (
+            <span key={t}>{t}</span>
+          ))}
+        </div>
+        <p>
+          <strong>{formatUsd(product.priceCents)}</strong> · Ready in about{' '}
+          {product.preparationMinutes} min
+        </p>
+        {!product.available && (
+          <p id="product-unavailable-message" className="error-message">
+            This item is unavailable and cannot be added right now.
+          </p>
+        )}
+        {product.modifiers?.map((g) => {
+          const missing =
+            active &&
+            g.required &&
+            !g.options.some((option) =>
+              selected.some((selection) => selection.id === option.id),
+            );
+          const requirementId = `modifier-${g.id}-requirement`;
+          return (
+            <fieldset
+              key={g.id}
+              ref={
+                g.id === incompleteRequiredGroup?.id
+                  ? firstIncompleteRef
+                  : undefined
+              }
+              tabIndex={-1}
+              aria-describedby={missing ? requirementId : undefined}
+              className={
+                missing
+                  ? 'modifier-group modifier-group-required'
+                  : 'modifier-group'
+              }
+            >
+              <legend>
+                {g.name}
+                {g.required ? ' (required)' : ''}
+              </legend>
+              {g.options.map((o) => (
+                <label className="choice" key={o.id}>
+                  <input
+                    type="radio"
+                    name={g.id}
+                    checked={selected.some((s) => s.id === o.id)}
+                    onChange={() =>
+                      setSelected((s) => [
+                        ...s.filter(
+                          (v) => !g.options.some((x) => x.id === v.id),
+                        ),
+                        o,
+                      ])
+                    }
+                  />
+                  {o.name} {o.priceCents ? `+${formatUsd(o.priceCents)}` : ''}
+                </label>
+              ))}
+              <p
+                id={requirementId}
+                className="modifier-requirement"
+                role="status"
+                aria-live="polite"
+              >
+                {missing
+                  ? `Choose ${g.name.replace(/^Choose /i, '').toLowerCase()} to continue.`
+                  : ''}
+              </p>
+            </fieldset>
+          );
+        })}
+        <label className="field">
+          Special instructions
+          <textarea
+            value={instructions}
+            onChange={(e) => setInstructions(e.target.value)}
+            maxLength={160}
+          />
+        </label>
+        <QuantityStepper
+          value={quantity}
+          onChange={setQuantity}
+          name={product.name}
+        />
+      </div>
+      <div className="sheet-action">
+        {active ? (
+          <button
+            type="button"
+            className="button"
+            aria-disabled={!product.available}
+            aria-describedby={addDescriptionIds || undefined}
+            onClick={attemptAdd}
+          >
+            Add · {formatUsd(total)}
+          </button>
+        ) : (
+          <button type="button" className="button" onClick={onRequireRound}>
+            Start round to order
+          </button>
+        )}
+      </div>
+    </ModalOverlay>
+  );
+}
+function RoundVerificationSheet({
+  course,
+  onClose,
+  onVerified,
+  returnFocus,
+}: {
+  course: Course;
+  onClose: () => void;
+  onVerified: (m: VerificationMethod) => void;
+  returnFocus?: HTMLElement | null;
+}) {
+  const [method, setMethod] =
+    useState<VerificationMethod>('simulated_location');
+  const [entry, setEntry] = useState('');
+  const [error, setError] = useState('');
+  const submit = () => {
+    if (method === 'simulated_location') {
+      if (course.demoLocationResult === 'eligible') onVerified(method);
+      else
+        setError(
+          'This simulated location cannot verify the round. Choose a QR or course code instead.',
+        );
+      return;
+    }
+    const expected =
+      method === 'demo_qr' ? course.demoQrToken : course.demoCode;
+    if (entry.trim().toUpperCase() === expected) onVerified(method);
+    else
+      setError(
+        `That demo ${method === 'demo_qr' ? 'QR token' : 'course code'} does not match. Try again.`,
+      );
+  };
+  return (
+    <ModalOverlay
+      className="verification-sheet"
+      labelledBy="verify-title"
+      onClose={onClose}
+      returnFocus={returnFocus}
+      dataAttributes={{ 'data-verification-sheet': '' }}
+    >
+      <button
+        type="button"
+        className="sheet-close"
+        onClick={onClose}
+        aria-label="Close round verification"
+      >
+        ×
+      </button>
+      <h2 id="verify-title">Start your round</h2>
+      <p>
+        Choose one demonstration method. No continuous location tracking is
+        used.
+      </p>
+      <div
+        className="method-tabs"
+        role="group"
+        aria-label="Verification method"
+      >
+        <button
+          type="button"
+          aria-pressed={method === 'simulated_location'}
+          onClick={() => {
+            setMethod('simulated_location');
+            setError('');
+          }}
+        >
+          Current location
+        </button>
+        <button
+          type="button"
+          aria-pressed={method === 'demo_qr'}
+          onClick={() => {
+            setMethod('demo_qr');
+            setError('');
+          }}
+        >
+          Demo QR
+        </button>
+        <button
+          type="button"
+          aria-pressed={method === 'demo_course_code'}
+          onClick={() => {
+            setMethod('demo_course_code');
+            setError('');
+          }}
+        >
+          Course code
+        </button>
+      </div>
+      {method === 'simulated_location' ? (
+        <div className="alert">
+          <p>
+            Demo mode simulates a one-time location check; it never contacts
+            geolocation.
+          </p>
+          {course.demoLocationResult !== 'eligible' && (
+            <div className="verification-recovery" role="status">
+              <strong>This demo course requires a non-location method.</strong>
+              <p>Choose Demo QR or Course code above to continue.</p>
+              <dl>
+                <dt>Fictional QR token</dt>
+                <dd>
+                  <code>{course.demoQrToken}</code>
+                </dd>
+                <dt>Fictional course code</dt>
+                <dd>
+                  <code>{course.demoCode}</code>
+                </dd>
+              </dl>
+            </div>
+          )}
+        </div>
+      ) : (
+        <label className="field" htmlFor="verification-entry">
+          {method === 'demo_qr' ? 'Demo QR token' : 'Demo course code'}
+          <input
+            id="verification-entry"
+            aria-label={
+              method === 'demo_qr' ? 'Demo QR token' : 'Demo course code'
+            }
+            value={entry}
+            onChange={(e) => setEntry(e.target.value)}
+            aria-invalid={Boolean(error)}
+          />
+          <small>
+            Try: {method === 'demo_qr' ? course.demoQrToken : course.demoCode}
+          </small>
+        </label>
+      )}
+      <p className="error-message" role="status">
+        {error}
+      </p>
+      <button type="button" className="button" onClick={submit}>
+        Verify and start round
+      </button>
+    </ModalOverlay>
+  );
+}
+function CourseChangeDialog({
+  currentName,
+  target,
+  onKeep,
+  onChange,
+}: {
+  currentName: string;
+  target: string;
+  onKeep: () => void;
+  onChange: () => void;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (typeof ref.current?.showModal === 'function') ref.current.showModal();
+    else ref.current?.setAttribute('open', '');
+  }, []);
+  return (
+    <dialog ref={ref} aria-labelledby="change-title">
+      <h2 id="change-title">Change courses?</h2>
+      <p>
+        Changing courses will clear the {currentName} cart because each order
+        belongs to one course.
+      </p>
+      <div className="button-row">
+        <button type="button" className="button secondary" onClick={onKeep}>
+          Keep current course
+        </button>
+        <button type="button" className="button" onClick={onChange}>
+          Clear cart and change to {target}
+        </button>
+      </div>
+    </dialog>
   );
 }

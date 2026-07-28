@@ -101,3 +101,11 @@ Phase 3 does not implement sign-in UI, account linking, claims, memberships, pri
 The React application now offers an intentional, one-time location action and a location-independent manual course search. Demo results are fictional; emulator results are deterministic. Connected mode calls the trusted `discoverGolfCourses` function only when `VITE_DISCOVERY_FUNCTION_URL` is configured. A Google Places key is never shipped to the browser. Discovered external courses remain separate from marketplace courses and cannot expose products or create course context. Availability requests are demonstrations only: they send no email and do not onboard a course.
 
 Current limitations: there is no map, authentication, saved-course implementation, production onboarding, course claiming, or connected availability-request persistence. Live discovery requires Google Cloud/Firebase configuration described in `docs/development/GOOGLE_PLACES_SETUP.md`.
+
+## Product Experience Reset (Phase 4A.2)
+
+The React demonstration now supports a complete fictional golfer journey: intentional course discovery, course-scoped visual storefronts, simulated Active Round verification, a one-course local cart, fulfillment selection, no-payment demo checkout, and local order-status tracking. The compact responsive shell exposes only meaningful Home/Course, Orders, Account, and contextual cart destinations.
+
+Cart and demo-order records are versioned, validated, stored only in the browser, and use integer cents. Demo mode does not call Google, Firebase, geolocation, payment, or a real course. Emulator mode retains its adapters; connected mode still provides discovery only and does **not** submit carts or orders. Images are repository-owned SVG illustrations. Authentication, real payment, course staff fulfillment, notifications, and production ordering remain intentionally out of scope.
+
+Real-browser product journey smoke tests use the development-only Playwright test runner and its Chromium browser. Run `npx playwright install --with-deps chromium` once, then `npm run test:browser`; the runner starts the demo Vite app automatically. Playwright is limited to regression testing and is not shipped in the application bundle.

@@ -1,8 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, expect, it, vi } from 'vitest';
+import { beforeEach, expect, it } from 'vitest';
 import { App } from './App';
-import type { VerificationMethod } from '../types/marketplace';
 const route = (hash: string) => {
   window.history.replaceState(null, '', hash);
   return render(<App />);
@@ -11,171 +10,317 @@ beforeEach(() => {
   localStorage.clear();
   window.history.replaceState(null, '', '#/');
 });
-
-it('requires intentional discovery, then shows courses without products', async () => {
-  const user = userEvent.setup();
+it('presents consumer discovery without requesting location automatically', () => {
   route('#/discover');
   expect(
-    screen.getByRole('heading', { name: 'Where are you playing today?' }),
-  ).toBeInTheDocument();
-  const locationAction = screen.getByRole('button', {
-    name: 'Find courses near me',
-  });
-  expect(locationAction).toBeEnabled();
-  expect(screen.queryByText('Summit Pines Resort')).not.toBeInTheDocument();
-  expect(screen.queryByText('Clubhouse Sandwich')).not.toBeInTheDocument();
+    screen.getByRole('heading', {
+      name: 'Everything you need, without leaving the course.',
+    }),
+  ).toBeVisible();
+  expect(screen.getByRole('searchbox', { name: /course name/i })).toBeVisible();
+  expect(screen.queryByText('Fairway Club')).not.toBeInTheDocument();
   expect(
-    screen.getByRole('navigation', { name: 'Golfer navigation' }),
-  ).toHaveTextContent('Find Course');
-
-  await user.click(locationAction);
-
-  expect(await screen.findByText('Summit Pines Resort')).toBeInTheDocument();
-  expect(
-    screen.getByRole('heading', { name: 'Ordering available nearby' }),
-  ).toBeInTheDocument();
-  expect(screen.queryByText('Clubhouse Sandwich')).not.toBeInTheDocument();
-  expect(screen.queryByRole('link', { name: /menu/i })).not.toBeInTheDocument();
+    screen.getByRole('navigation', { name: 'Main navigation' }),
+  ).not.toHaveTextContent(/Rewards|Track/);
 });
-it('selects a course, scopes products, blocks ordering, and changes navigation', async () => {
-  route('#/course/summit-pines');
-  expect(await screen.findByText('Clubhouse Sandwich')).toBeInTheDocument();
-  expect(screen.queryByText('Trail Mix Cup')).not.toBeInTheDocument();
+it('distinguishes enabled and external courses without leaking products', async () => {
+  const user = userEvent.setup();
+  route('#/discover');
+  await user.click(
+    screen.getByRole('button', { name: 'Find courses near me' }),
+  );
   expect(
-    await screen.findByRole('complementary', { name: 'Course context' }),
-  ).toHaveTextContent('Browsing · Summit Pines Resort');
+    await screen.findByRole('heading', { name: 'Ordering available nearby' }),
+  ).toBeVisible();
+  expect(screen.getAllByText('Ordering available').length).toBeGreaterThan(0);
   expect(
-    screen.getByRole('navigation', { name: 'Golfer navigation' }),
-  ).toHaveTextContent('Menu');
-  expect(
-    screen.getAllByRole('button', { name: 'Verify course to order' })[0],
-  ).toBeDisabled();
+    screen.getAllByText('Ordering not available here yet').length,
+  ).toBeGreaterThan(0);
+  expect(screen.queryByText('Fairway Club')).not.toBeInTheDocument();
 });
-it.each<[string, VerificationMethod]>([
-  ['Confirm demo location', 'simulated_location'],
-  ['Check demo QR', 'demo_qr'],
-  ['Verify demo code', 'demo_course_code'],
-])('creates one-course Active Round using %s', async (button, method) => {
+it('gives every product card a visible action and supports keyboard opening', async () => {
   const user = userEvent.setup();
   route('#/course/summit-pines');
-  await screen.findByText('Clubhouse Sandwich');
-  if (method === 'demo_qr')
-    await user.type(screen.getByLabelText('Demo QR token'), 'SUMMIT-DEMO-QR');
-  if (method === 'demo_course_code')
-    await user.type(screen.getByLabelText('Demo course code'), 'BIRDIE7');
-  await user.click(screen.getByRole('button', { name: button }));
-  expect(
-    await screen.findByRole('complementary', { name: 'Course context' }),
-  ).toHaveTextContent('Active Round · Summit Pines Resort');
-  await waitFor(() => {
-    expect(
-      JSON.parse(
-        localStorage.getItem('golfer-goodies.course-context.v1') ?? '{}',
-      ).activeRound,
-    ).toMatchObject({ courseId: 'summit-pines', verificationMethod: method });
+  const productButtons = await screen.findAllByRole('button', {
+    name: /View .+ details/,
   });
-  expect(
-    screen.getAllByRole('button', {
-      name: 'Ordering planned — not yet available',
-    })[0],
-  ).toBeDisabled();
+  expect(productButtons).toHaveLength(6);
+  expect(screen.getAllByText(/View details/)).toHaveLength(6);
+  productButtons[1].focus();
+  await user.keyboard('{Enter}');
+  expect(screen.getByRole('dialog', { name: 'Citrus Sparkler' })).toBeVisible();
 });
-it('rejects invalid demo code and announces status without geolocation', async () => {
-  const originalGeolocation = Object.getOwnPropertyDescriptor(
-    navigator,
-    'geolocation',
+it('filters course products with accessible chips without changing route, round, or cart', async () => {
+  const now = new Date();
+  localStorage.setItem(
+    'golfer-goodies.course-context.v1',
+    JSON.stringify({
+      selectedCourseId: 'summit-pines',
+      mode: 'active_round',
+      activeRound: {
+        courseId: 'summit-pines',
+        verificationMethod: 'simulated_location',
+        verifiedAt: now.toISOString(),
+        expiresAt: new Date(now.getTime() + 60 * 60_000).toISOString(),
+      },
+    }),
   );
-  const getCurrentPosition = vi.fn();
-  Object.defineProperty(navigator, 'geolocation', {
-    configurable: true,
-    value: {
-      getCurrentPosition,
-      watchPosition: vi.fn(),
-      clearWatch: vi.fn(),
-    },
+  localStorage.setItem(
+    'golfer-goodies.cart.v1',
+    JSON.stringify({
+      version: 1,
+      courseId: 'summit-pines',
+      updatedAt: now.toISOString(),
+      items: [
+        {
+          id: 'summit-pines-sparkler-standard',
+          productId: 'summit-pines-sparkler',
+          name: 'Citrus Sparkler',
+          unitPriceCents: 395,
+          quantity: 1,
+          image: 'images/demo/products/sparkler.svg',
+          selectedModifiers: [],
+          instructions: '',
+        },
+      ],
+    }),
+  );
+  const user = userEvent.setup();
+  route('#/course/summit-pines');
+  await screen.findByRole('button', { name: 'All products' });
+  const routeBefore = window.location.hash;
+  const all = screen.getByRole('button', { name: 'All products' });
+  const food = screen.getByRole('button', { name: 'Food products' });
+  const drink = screen.getByRole('button', { name: 'Drink products' });
+  expect(all).toHaveAttribute('aria-pressed', 'true');
+  expect(document.querySelectorAll('.category-nav a')).toHaveLength(0);
+  expect(food).not.toHaveAttribute('href');
+
+  await user.click(food);
+  expect(food).toHaveAttribute('aria-pressed', 'true');
+  expect(all).toHaveAttribute('aria-pressed', 'false');
+  expect(screen.getByText('Fairway Club')).toBeVisible();
+  expect(screen.queryByText('Citrus Sparkler')).not.toBeInTheDocument();
+
+  drink.focus();
+  await user.keyboard('{Enter}');
+  expect(drink).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByText('Citrus Sparkler')).toBeVisible();
+  expect(screen.queryByText('Fairway Club')).not.toBeInTheDocument();
+
+  all.focus();
+  await user.keyboard(' ');
+  expect(all).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByText('Fairway Club')).toBeVisible();
+  expect(screen.getByText('Citrus Sparkler')).toBeVisible();
+  expect(window.location.hash).toBe(routeBefore);
+  expect(window.location.hash).toBe('#/course/summit-pines');
+  expect(
+    screen.queryByRole('heading', { name: 'Page not found' }),
+  ).not.toBeInTheDocument();
+  expect(screen.getAllByText(/Active at Summit Pines/).length).toBeGreaterThan(
+    0,
+  );
+  expect(screen.getAllByLabelText('Cart, 1 items')).toHaveLength(2);
+  expect(
+    [...document.querySelectorAll<HTMLElement>('.product-open')].every(
+      (element) => element.dataset.productId?.startsWith('summit-pines-'),
+    ),
+  ).toBe(true);
+});
+it('opens the same product from its image, name, and visible action', async () => {
+  const user = userEvent.setup();
+  route('#/course/summit-pines');
+  await user.click(
+    await screen.findByAltText('Fairway Club, demonstration item'),
+  );
+  expect(
+    document.querySelector(
+      '[data-product-sheet][data-product-id="summit-pines-club-sandwich"]',
+    ),
+  ).toBeVisible();
+  expect(screen.getByRole('dialog', { name: 'Fairway Club' })).toBeVisible();
+  await user.click(
+    screen.getByRole('button', { name: 'Close product details' }),
+  );
+  await user.click(screen.getByRole('heading', { name: 'Fairway Club' }));
+  expect(screen.getByRole('dialog', { name: 'Fairway Club' })).toBeVisible();
+  await user.click(
+    screen.getByRole('button', { name: 'Close product details' }),
+  );
+  await user.click(screen.getAllByText(/View details/)[0]);
+  expect(screen.getByRole('dialog', { name: 'Fairway Club' })).toBeVisible();
+});
+it('closes the product portal with Escape and backdrop and restores card focus', async () => {
+  const user = userEvent.setup();
+  route('#/course/summit-pines');
+  const opener = await screen.findByRole('button', {
+    name: 'View Fairway Club details',
   });
-  try {
+  await user.click(opener);
+  await user.keyboard('{Escape}');
+  expect(
+    screen.queryByRole('dialog', { name: 'Fairway Club' }),
+  ).not.toBeInTheDocument();
+  await new Promise((resolve) => window.setTimeout(resolve, 0));
+  expect(opener).toHaveFocus();
+
+  await user.click(opener);
+  const backdrop = document.querySelector<HTMLElement>('[data-product-sheet]');
+  expect(backdrop).toBeVisible();
+  await user.click(backdrop as HTMLElement);
+  expect(
+    screen.queryByRole('dialog', { name: 'Fairway Club' }),
+  ).not.toBeInTheDocument();
+});
+it('completes the Summit Pines product-to-cart journey with required modifier guidance', async () => {
+  const user = userEvent.setup();
+  route('#/course/summit-pines');
+  expect(await screen.findByText('Fairway Club')).toBeVisible();
+  expect(screen.getByText(/You’re browsing Summit Pines/)).toBeVisible();
+  await user.click(
+    screen.getByRole('button', { name: 'View Fairway Club details' }),
+  );
+  expect(screen.getByRole('dialog', { name: 'Fairway Club' })).toBeVisible();
+  await user.click(
+    screen.getByRole('button', { name: 'Start round to order' }),
+  );
+  expect(
+    screen.getByRole('dialog', { name: 'Start your round' }),
+  ).toBeVisible();
+  expect(document.querySelector('[data-verification-sheet]')).toBeVisible();
+  expect(screen.queryByLabelText('Demo course code')).not.toBeInTheDocument();
+  await user.click(
+    screen.getByRole('button', { name: 'Verify and start round' }),
+  );
+  expect(
+    (await screen.findAllByText(/Active at Summit Pines/))[0],
+  ).toBeVisible();
+  expect(screen.getByRole('dialog', { name: 'Fairway Club' })).toBeVisible();
+  const add = screen.getByRole('button', { name: /Add · \$10\.95/ });
+  expect(screen.getByText('Choose a side to continue.')).toBeVisible();
+  expect(add).toHaveAccessibleDescription('Choose a side to continue.');
+  await user.click(add);
+  expect(screen.getAllByLabelText('Cart, 0 items')).toHaveLength(2);
+  expect(screen.getByRole('group', { name: /Choose a side/ })).toHaveFocus();
+  await user.click(screen.getByRole('radio', { name: 'Kettle chips' }));
+  expect(
+    screen.queryByText('Choose a side to continue.'),
+  ).not.toBeInTheDocument();
+  await user.click(add);
+  expect(screen.getAllByLabelText('Cart, 1 items')).toHaveLength(2);
+  const floatingCart = screen.getByRole('link', { name: /1 item.*View cart/i });
+  expect(floatingCart).toHaveTextContent('$10.95');
+  await user.click(floatingCart);
+  expect(
+    await screen.findByRole('heading', { name: /Summit Pines/ }),
+  ).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Fairway Club' })).toBeVisible();
+  expect(screen.getAllByText('$10.95').length).toBeGreaterThan(0);
+});
+it('recovers Cedar Bend verification through its course code and restores the product', async () => {
+  const user = userEvent.setup();
+  route('#/course/cedar-bend-muni');
+  await user.click(
+    await screen.findByRole('button', { name: 'View Citrus Sparkler details' }),
+  );
+  await user.click(
+    screen.getByRole('button', { name: 'Start round to order' }),
+  );
+  expect(
+    screen.getByRole('button', { name: 'Current location' }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  expect(
+    screen.getByText('This demo course requires a non-location method.'),
+  ).toBeVisible();
+  expect(screen.getByText('CEDAR-DEMO-QR')).toBeVisible();
+  expect(screen.getByText('CEDAR3')).toBeVisible();
+  await user.click(
+    screen.getByRole('button', { name: 'Verify and start round' }),
+  );
+  expect(screen.getByText(/cannot verify the round/i)).toBeVisible();
+  await user.click(screen.getByRole('button', { name: 'Course code' }));
+  expect(screen.getByRole('button', { name: 'Course code' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  const courseCodeInput = document.getElementById('verification-entry');
+  expect(courseCodeInput).toHaveAccessibleName('Demo course code');
+  await user.type(courseCodeInput as HTMLInputElement, 'CEDAR3');
+  await user.click(
+    screen.getByRole('button', { name: 'Verify and start round' }),
+  );
+  expect(screen.getByRole('dialog', { name: 'Citrus Sparkler' })).toBeVisible();
+  await user.click(screen.getByRole('button', { name: /Add ·/ }));
+  expect(screen.getAllByLabelText('Cart, 1 items')).toHaveLength(2);
+  await user.click(screen.getByRole('link', { name: /1 item.*View cart/i }));
+  expect(
+    await screen.findByRole('heading', { name: /Cedar Bend/ }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole('heading', { name: 'Citrus Sparkler' }),
+  ).toBeVisible();
+});
+it.each([
+  ['circuit-links', 'Ordering paused'],
+  ['heritage-oaks', 'Closed'],
+])(
+  'keeps %s products browseable but blocks additions',
+  async (courseId, status) => {
     const user = userEvent.setup();
-    route('#/course/summit-pines');
-    await screen.findByText('Clubhouse Sandwich');
-    await user.type(screen.getByLabelText('Demo course code'), 'WRONG');
-    await user.click(screen.getByRole('button', { name: 'Verify demo code' }));
-    expect(screen.getByText(/code invalid/i)).toBeInTheDocument();
-    expect(getCurrentPosition).not.toHaveBeenCalled();
-  } finally {
-    if (originalGeolocation)
-      Object.defineProperty(navigator, 'geolocation', originalGeolocation);
-    else Reflect.deleteProperty(navigator, 'geolocation');
-  }
-});
-it('rejects an invalid demo QR and associates the error with its field', async () => {
-  const user = userEvent.setup();
-  route('#/course/summit-pines');
-  await screen.findByText('Clubhouse Sandwich');
-  const field = screen.getByLabelText('Demo QR token');
-  await user.type(field, 'NOT-A-TOKEN');
-  await user.click(screen.getByRole('button', { name: 'Check demo QR' }));
-  expect(screen.getByText(/Demo QR invalid/i)).toBeInTheDocument();
-  expect(field).toHaveAttribute('aria-invalid', 'true');
-  expect(field).toHaveAttribute(
-    'aria-describedby',
-    'qr-help verification-message',
-  );
-});
-it('changing course replaces product and Active Round context', async () => {
-  const user = userEvent.setup();
-  route('#/course/summit-pines');
-  await screen.findByText('Clubhouse Sandwich');
-  await user.click(
-    screen.getByRole('button', { name: 'Confirm demo location' }),
-  );
-  window.location.hash = '#/course/meadow-loop';
-  await waitFor(() =>
-    expect(screen.getByText('Trail Mix Cup')).toBeInTheDocument(),
-  );
-  expect(screen.queryByText('Clubhouse Sandwich')).not.toBeInTheDocument();
+    route(`#/course/${courseId}`);
+    expect(await screen.findByText(status)).toBeVisible();
+    await user.click(
+      screen.getByRole('button', { name: 'View Citrus Sparkler details' }),
+    );
+    expect(
+      screen.queryByRole('button', { name: /Add ·/ }),
+    ).not.toBeInTheDocument();
+  },
+);
+it('cart route is a real consumer empty state, not a placeholder', () => {
+  route('#/cart');
   expect(
-    await screen.findByRole('complementary', { name: 'Course context' }),
-  ).toHaveTextContent('Browse only');
+    screen.getByRole('heading', { name: 'Your cart is ready for the round' }),
+  ).toBeVisible();
+  expect(screen.queryByText(/Foundation ready/)).not.toBeInTheDocument();
 });
-
-it('offers non-location alternatives when demo location is uncertain', async () => {
-  const user = userEvent.setup();
-  route('#/course/meadow-loop');
-  await screen.findByText('Trail Mix Cup');
-  await user.click(
-    screen.getByRole('button', { name: 'Confirm demo location' }),
+it('requires confirmation instead of carrying a cart across courses', async () => {
+  localStorage.setItem(
+    'golfer-goodies.cart.v1',
+    JSON.stringify({
+      version: 1,
+      courseId: 'summit-pines',
+      updatedAt: new Date().toISOString(),
+      items: [
+        {
+          id: 'summit-pines-sparkler-standard',
+          productId: 'summit-pines-sparkler',
+          name: 'Citrus Sparkler',
+          unitPriceCents: 395,
+          quantity: 1,
+          image: 'images/demo/products/sparkler.svg',
+          selectedModifiers: [],
+          instructions: '',
+        },
+      ],
+    }),
   );
-  expect(screen.getByText(/Verification uncertain/i)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Check demo QR' })).toBeEnabled();
-  expect(
-    screen.getByRole('button', { name: 'Verify demo code' }),
-  ).toBeEnabled();
-});
-
-it('shows an actionable outside-service-area demo result', async () => {
-  const user = userEvent.setup();
-  route('#/course/cedar-bend-muni');
-  await screen.findByText('Clubhouse Sandwich');
-  await user.click(
-    screen.getByRole('button', { name: 'Confirm demo location' }),
-  );
-  expect(screen.getByText(/Outside service area/i)).toBeInTheDocument();
-  expect(
-    screen.getByRole('link', { name: 'choose another course' }),
-  ).toBeInTheDocument();
-});
-
-it('explains paused, closed, and pickup-only course states', async () => {
-  const paused = route('#/course/circuit-links');
-  expect(await screen.findByText(/Ordering is paused/i)).toBeInTheDocument();
-  paused.unmount();
-  const closed = route('#/course/heritage-oaks');
-  expect(await screen.findByText(/course is closed/i)).toBeInTheDocument();
-  expect(screen.getByText(/Pickup-only availability/i)).toBeInTheDocument();
-  closed.unmount();
   route('#/course/cedar-bend-muni');
   expect(
-    await screen.findByText(/Pickup-only availability/i),
-  ).toBeInTheDocument();
+    await screen.findByRole('dialog', { name: 'Change courses?' }),
+  ).toHaveTextContent(/will clear/i);
+  expect(
+    JSON.parse(localStorage.getItem('golfer-goodies.cart.v1') ?? '{}'),
+  ).toMatchObject({
+    courseId: 'summit-pines',
+  });
+});
+it('orders and account primary destinations are meaningful', () => {
+  const view = route('#/orders');
+  expect(screen.getByRole('heading', { name: 'Your orders' })).toBeVisible();
+  view.unmount();
+  route('#/account');
+  expect(screen.getByRole('heading', { name: 'Account' })).toBeVisible();
+  expect(screen.queryByText(/planned for a future/)).not.toBeInTheDocument();
 });
