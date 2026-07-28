@@ -50,16 +50,20 @@ it('gives every product card a visible action and supports keyboard opening', as
   await user.keyboard('{Enter}');
   expect(screen.getByRole('dialog', { name: 'Citrus Sparkler' })).toBeVisible();
 });
-it('filters course products with accessible chips without changing route, round, or cart', async () => {
+it('filters course products with accessible chips without changing route, session, or cart', async () => {
   const now = new Date();
   localStorage.setItem(
     'golfer-goodies.course-context.v1',
     JSON.stringify({
       selectedCourseId: 'summit-pines',
-      mode: 'active_round',
-      activeRound: {
+      mode: 'ordering_session',
+      orderingSession: {
+        version: 1,
+        id: 'test-session',
         courseId: 'summit-pines',
         verificationMethod: 'simulated_location',
+        status: 'active',
+        confidence: 'demo',
         verifiedAt: now.toISOString(),
         expiresAt: new Date(now.getTime() + 60 * 60_000).toISOString(),
       },
@@ -118,9 +122,9 @@ it('filters course products with accessible chips without changing route, round,
   expect(
     screen.queryByRole('heading', { name: 'Page not found' }),
   ).not.toBeInTheDocument();
-  expect(screen.getAllByText(/Active at Summit Pines/).length).toBeGreaterThan(
-    0,
-  );
+  expect(
+    screen.getAllByText(/Ordering unlocked at Summit Pines/).length,
+  ).toBeGreaterThan(0);
   expect(screen.getAllByLabelText('Cart, 1 items')).toHaveLength(2);
   expect(
     [...document.querySelectorAll<HTMLElement>('.product-open')].every(
@@ -173,93 +177,44 @@ it('closes the product portal with Escape and backdrop and restores card focus',
     screen.queryByRole('dialog', { name: 'Fairway Club' }),
   ).not.toBeInTheDocument();
 });
-it('completes the Summit Pines product-to-cart journey with required modifier guidance', async () => {
+it('preserves a valid product intent and adds automatically after verification', async () => {
   const user = userEvent.setup();
   route('#/course/summit-pines');
-  expect(await screen.findByText('Fairway Club')).toBeVisible();
-  expect(screen.getByText(/You’re browsing Summit Pines/)).toBeVisible();
   await user.click(
-    screen.getByRole('button', { name: 'View Fairway Club details' }),
+    await screen.findByRole('button', { name: 'View Fairway Club details' }),
   );
-  expect(screen.getByRole('dialog', { name: 'Fairway Club' })).toBeVisible();
-  await user.click(
-    screen.getByRole('button', { name: 'Start round to order' }),
-  );
-  expect(
-    screen.getByRole('dialog', { name: 'Start your round' }),
-  ).toBeVisible();
-  expect(document.querySelector('[data-verification-sheet]')).toBeVisible();
-  expect(screen.queryByLabelText('Demo course code')).not.toBeInTheDocument();
-  await user.click(
-    screen.getByRole('button', { name: 'Verify and start round' }),
-  );
-  expect(
-    (await screen.findAllByText(/Active at Summit Pines/))[0],
-  ).toBeVisible();
-  expect(screen.getByRole('dialog', { name: 'Fairway Club' })).toBeVisible();
-  const add = screen.getByRole('button', { name: /Add · \$10\.95/ });
-  expect(screen.getByText('Choose a side to continue.')).toBeVisible();
-  expect(add).toHaveAccessibleDescription('Choose a side to continue.');
-  await user.click(add);
-  expect(screen.getAllByLabelText('Cart, 0 items')).toHaveLength(2);
-  expect(screen.getByRole('group', { name: /Choose a side/ })).toHaveFocus();
   await user.click(screen.getByRole('radio', { name: 'Kettle chips' }));
+  await user.click(
+    screen.getByRole('button', { name: 'Verify you’re at this course' }),
+  );
   expect(
-    screen.queryByText('Choose a side to continue.'),
-  ).not.toBeInTheDocument();
-  await user.click(add);
-  expect(screen.getAllByLabelText('Cart, 1 items')).toHaveLength(2);
-  const floatingCart = screen.getByRole('link', { name: /1 item.*View cart/i });
-  expect(floatingCart).toHaveTextContent('$10.95');
-  await user.click(floatingCart);
-  expect(
-    await screen.findByRole('heading', { name: /Summit Pines/ }),
+    screen.getByRole('dialog', {
+      name: 'Confirm you’re at Summit Pines Resort',
+    }),
   ).toBeVisible();
-  expect(screen.getByRole('heading', { name: 'Fairway Club' })).toBeVisible();
-  expect(screen.getAllByText('$10.95').length).toBeGreaterThan(0);
+  await user.click(screen.getByRole('button', { name: 'Use my location' }));
+  await user.click(screen.getByRole('button', { name: 'Check location' }));
+  expect(
+    (await screen.findAllByText(/Ordering unlocked at Summit Pines/))[0],
+  ).toBeVisible();
+  expect(screen.getAllByLabelText('Cart, 1 items')).toHaveLength(2);
 });
-it('recovers Cedar Bend verification through its course code and restores the product', async () => {
+it('retains a Cedar Bend intent after location rejection and accepts course code', async () => {
   const user = userEvent.setup();
   route('#/course/cedar-bend-muni');
   await user.click(
     await screen.findByRole('button', { name: 'View Citrus Sparkler details' }),
   );
   await user.click(
-    screen.getByRole('button', { name: 'Start round to order' }),
+    screen.getByRole('button', { name: 'Verify you’re at this course' }),
   );
-  expect(
-    screen.getByRole('button', { name: 'Current location' }),
-  ).toHaveAttribute('aria-pressed', 'true');
-  expect(
-    screen.getByText('This demo course requires a non-location method.'),
-  ).toBeVisible();
-  expect(screen.getByText('CEDAR-DEMO-QR')).toBeVisible();
-  expect(screen.getByText('CEDAR3')).toBeVisible();
-  await user.click(
-    screen.getByRole('button', { name: 'Verify and start round' }),
-  );
-  expect(screen.getByText(/cannot verify the round/i)).toBeVisible();
-  await user.click(screen.getByRole('button', { name: 'Course code' }));
-  expect(screen.getByRole('button', { name: 'Course code' })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
-  const courseCodeInput = document.getElementById('verification-entry');
-  expect(courseCodeInput).toHaveAccessibleName('Demo course code');
-  await user.type(courseCodeInput as HTMLInputElement, 'CEDAR3');
-  await user.click(
-    screen.getByRole('button', { name: 'Verify and start round' }),
-  );
-  expect(screen.getByRole('dialog', { name: 'Citrus Sparkler' })).toBeVisible();
-  await user.click(screen.getByRole('button', { name: /Add ·/ }));
+  await user.click(screen.getByRole('button', { name: 'Use my location' }));
+  await user.click(screen.getByRole('button', { name: 'Check location' }));
+  expect(screen.getByText(/cannot be unlocked/i)).toBeVisible();
+  await user.click(screen.getByRole('button', { name: 'Enter course code' }));
+  await user.type(screen.getByLabelText('Demo course code'), 'CEDAR3');
+  await user.click(screen.getByRole('button', { name: 'Unlock ordering' }));
   expect(screen.getAllByLabelText('Cart, 1 items')).toHaveLength(2);
-  await user.click(screen.getByRole('link', { name: /1 item.*View cart/i }));
-  expect(
-    await screen.findByRole('heading', { name: /Cedar Bend/ }),
-  ).toBeVisible();
-  expect(
-    screen.getByRole('heading', { name: 'Citrus Sparkler' }),
-  ).toBeVisible();
 });
 it.each([
   ['circuit-links', 'Ordering paused'],
@@ -281,7 +236,7 @@ it.each([
 it('cart route is a real consumer empty state, not a placeholder', () => {
   route('#/cart');
   expect(
-    screen.getByRole('heading', { name: 'Your cart is ready for the round' }),
+    screen.getByRole('heading', { name: 'Your cart is ready' }),
   ).toBeVisible();
   expect(screen.queryByText(/Foundation ready/)).not.toBeInTheDocument();
 });

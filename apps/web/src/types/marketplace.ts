@@ -71,6 +71,14 @@ export interface Course {
   promotion?: string;
   orderingPaused?: boolean;
   demoLocationResult?: 'eligible' | 'uncertain' | 'outside_service_area';
+  locationVerificationEnabled?: boolean;
+  serviceAreaConfiguration?: {
+    type: 'radius';
+    latitude: number;
+    longitude: number;
+    radiusMeters: number;
+    source: 'staff' | 'osm' | 'platform' | 'radius_fallback';
+  };
   image: string;
   imageAlt: string;
 }
@@ -155,23 +163,26 @@ export interface Promotion {
 
 export type VerificationMethod =
   | 'simulated_location'
-  | 'demo_qr'
-  | 'demo_course_code';
-export interface ActiveRound {
+  | 'geolocation'
+  | 'course_qr'
+  | 'course_code';
+export interface OrderingSession {
+  version: 1;
+  id: string;
   courseId: string;
   verificationMethod: VerificationMethod;
   verifiedAt: string;
   expiresAt: string;
-  holeNumber?: number;
-  cartNumber?: string;
+  status: 'active' | 'expired' | 'revoked';
+  confidence: 'high' | 'fallback' | 'demo';
 }
 export type CourseContext =
   | { selectedCourseId: null; mode: 'none' }
   | { selectedCourseId: string; mode: 'browse'; expired?: boolean }
   | {
       selectedCourseId: string;
-      mode: 'active_round';
-      activeRound: ActiveRound;
+      mode: 'ordering_session';
+      orderingSession: OrderingSession;
     };
 export type CourseEligibility =
   | {
@@ -182,8 +193,8 @@ export type CourseEligibility =
     }
   | {
       status: 'uncertain';
-      reason: 'low_location_accuracy' | 'near_boundary';
-      alternatives: ('demo_qr' | 'demo_course_code')[];
+      reason: 'low_accuracy' | 'near_boundary';
+      alternatives: ('course_qr' | 'course_code')[];
     }
   | {
       status: 'not_eligible';

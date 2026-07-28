@@ -21,7 +21,7 @@ export function ExternalCoursePage() {
       <div className="alert">
         <strong>Ordering not available here yet.</strong>
         <p>
-          This external course has no menu, products, Active Round, or
+          This external course has no menu, products, Ordering Session, or
           marketplace ordering context.
         </p>
       </div>

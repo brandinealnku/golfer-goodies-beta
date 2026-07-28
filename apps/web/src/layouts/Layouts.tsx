@@ -93,25 +93,29 @@ export function MobileBottomNav() {
   );
 }
 export function CourseContextBar() {
-  const { context, endRound } = useCourseContext();
+  const { context, endOrderingSession } = useCourseContext();
   if (!context.selectedCourseId) return null;
   const course = demoCourses.find((c) => c.id === context.selectedCourseId);
   if (!course) return null;
   return (
     <aside className="course-context-bar" aria-label="Current course">
       <strong>
-        {context.mode === 'active_round'
-          ? `Active at ${course.name}`
-          : `${course.name} · Browse only`}
+        {context.mode === 'ordering_session'
+          ? `Ordering unlocked at ${course.name}`
+          : `${course.name} · Browse menu`}
       </strong>
       <span>
-        {context.mode === 'active_round'
-          ? 'Up to 2 hours remaining'
-          : 'Start your round to unlock ordering'}
+        {context.mode === 'ordering_session'
+          ? 'Ordering Session · up to 2 hours remaining'
+          : 'Verify when you’re ready to add an item'}
       </span>
-      {context.mode === 'active_round' && (
-        <button type="button" className="link-button" onClick={endRound}>
-          End round
+      {context.mode === 'ordering_session' && (
+        <button
+          type="button"
+          className="link-button"
+          onClick={endOrderingSession}
+        >
+          End ordering session
         </button>
       )}
     </aside>

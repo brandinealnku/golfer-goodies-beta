@@ -41,12 +41,10 @@ export function CartPage() {
   );
   const place = () => {
     if (
-      context.mode !== 'active_round' ||
-      context.activeRound.courseId !== course.id
+      context.mode !== 'ordering_session' ||
+      context.orderingSession.courseId !== course.id
     ) {
-      setError(
-        'Start an Active Round at this course before placing a demo order.',
-      );
+      setError('Verify you’re at this course before placing a demo order.');
       return;
     }
     if (!method) {
@@ -251,10 +249,8 @@ export function CartEmptyState() {
   return (
     <div className="page empty-state">
       <span aria-hidden="true">⛳</span>
-      <h1>Your cart is ready for the round</h1>
-      <p>
-        Start an Active Round, then add clubhouse favorites and golf essentials.
-      </p>
+      <h1>Your cart is ready</h1>
+      <p>Browse a course menu, then verify when you’re ready to add an item.</p>
       <Link className="button" to="/discover">
         Find your course
       </Link>
