@@ -79,3 +79,9 @@ Phase 3 is **implemented but not verified complete**. Do not claim the emulators
 ## Exact recommended Phase 4 task
 
 > **Phase 4: Authentication, Guest Identity, and Account Linking** — Begin only after every deferred Phase 2/3 quality, rules, emulator integration, build, demo smoke, emulator smoke, and accessibility check passes. Preserve v0.1, Firebase-independent demo mode, `golfer-goodies-local` guards, repository adapters, deterministic fictional fixtures, and deny-first rules. Implement emulator-only golfer identity lifecycle, explicitly modeled guest identity, account creation/sign-in/sign-out/recovery test flows, safe guest-to-account linking with conflict handling, membership records without client-assigned privileged roles, consent/deletion placeholders, and positive and negative Auth/Firestore/browser tests. Do not configure production Firebase, deploy services, add social providers, custom privileged claims, Stripe, checkout, real orders, or real user data.
+
+## v0.3 Phase 4A increment
+
+Implemented a typed course-discovery boundary, fictional demo and deterministic emulator providers, a server-mediated Google Places provider, provider-ID marketplace matching, intentional one-time location UX, manual fallback, external-course/request demonstration, accessible status messaging, and provider attribution. Connected discovery remains configuration-dependent; availability requests are not production submissions. No authentication, claiming, cart, checkout, orders, inventory, payments, or live map was added.
+
+Recommended next phase: **Phase 4B: Authentication, Guest Identity, and Account Linking**.

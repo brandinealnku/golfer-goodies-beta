@@ -135,10 +135,59 @@ nav a.active {
   font-weight: 700;
 }
 .field input,
-.field select {
+.field select,
+.field textarea {
   min-height: 48px;
   padding: 0.7rem;
   font: inherit;
+}
+.discovery-page section {
+  margin-block: 1.5rem;
+}
+.location-panel,
+.search-panel {
+  padding: 1rem;
+  background: var(--color-cream-100);
+  border-radius: var(--radius-md);
+}
+.search-panel {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+}
+.availability {
+  font-weight: 800;
+}
+.available {
+  color: var(--color-success);
+}
+.unavailable {
+  color: var(--color-danger);
+}
+.card > a {
+  display: block;
+  margin-top: 0.75rem;
+}
+.skeleton {
+  padding: 2rem;
+  background: linear-gradient(
+    90deg,
+    var(--color-cream-100),
+    white,
+    var(--color-cream-100)
+  );
+}
+.google-attribution {
+  font-weight: 700;
+}
+@media (max-width: 500px) {
+  .discovery-page .grid {
+    grid-template-columns: 1fr;
+  }
 }
 .button {
   border: 0;

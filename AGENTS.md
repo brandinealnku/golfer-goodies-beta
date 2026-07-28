@@ -42,3 +42,16 @@
 - Preserve non-location alternatives.
 - Do not store continuous location history.
 - Preserve one-course-per-cart behavior.
+
+## Permanent discovery rules
+
+- Never expose Places web-service keys to the browser.
+- Never request location on page load.
+- Never require location to search for a course.
+- Never use continuous location tracking for course discovery.
+- Never persist exact search coordinates.
+- Never infer marketplace participation from a place name.
+- Never display products for an external course.
+- Never treat discovery location as ordering eligibility.
+- Always preserve manual search.
+- Always display required provider attribution.

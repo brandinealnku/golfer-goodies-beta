@@ -5,6 +5,38 @@ export type ProductCategory =
   | 'essentials'
   | 'service';
 export type FulfillmentMethod = 'pickup' | 'cart-delivery' | 'on-course-meetup';
+export type DiscoveryProvider = 'google_places' | 'demo' | 'emulator';
+export interface DiscoveredGolfCourse {
+  provider: DiscoveryProvider;
+  providerPlaceId: string;
+  name: string;
+  formattedAddress: string;
+  latitude: number;
+  longitude: number;
+  approximateDistanceMiles?: number;
+  businessStatus?: 'OPERATIONAL' | 'CLOSED_TEMPORARILY' | 'CLOSED_PERMANENTLY';
+  googleMapsUri?: string;
+}
+export interface MarketplaceCourseSummary {
+  id: string;
+  provider: DiscoveryProvider;
+  providerPlaceId: string;
+  marketplaceStatus:
+    | 'active'
+    | 'onboarding'
+    | 'paused'
+    | 'suspended'
+    | 'inactive';
+  orderingEnabled: boolean;
+  fulfillmentMethods: FulfillmentMethod[];
+  estimatedMinutes?: number;
+  promotion?: string;
+}
+export interface CourseDiscoveryResult {
+  discoveredCourse: DiscoveredGolfCourse;
+  marketplaceCourse?: MarketplaceCourseSummary;
+  orderingAvailable: boolean;
+}
 export type CourseAvailability = 'open' | 'limited' | 'closed';
 export type UserRole = 'golfer' | 'partner-admin' | 'staff' | 'platform-admin';
 export type OrderStatus =

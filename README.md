@@ -95,3 +95,9 @@ The app retains semantic landmarks, keyboard focus, labels, live status, reduced
 Run `npm run firebase:verify` first. A refused seed indicates missing emulator host variables or the wrong project. Port conflicts require stopping the conflicting process; do not change only one client/config value. Build before starting Hosting Emulator. The diagnostics route is a development tool and reveals no tokens or secrets.
 
 Phase 3 does not implement sign-in UI, account linking, claims, memberships, privileged course writes, orders, inventory transactions, uploads UI, App Check, notifications, production projects, deployment, Stripe, or payments. Firebase client identifiers are local placeholders, not secrets. Never use the test password outside local emulators.
+
+## v0.3 Phase 4A: course discovery
+
+The React application now offers an intentional, one-time location action and a location-independent manual course search. Demo results are fictional; emulator results are deterministic. Connected mode calls the trusted `discoverGolfCourses` function only when `VITE_DISCOVERY_FUNCTION_URL` is configured. A Google Places key is never shipped to the browser. Discovered external courses remain separate from marketplace courses and cannot expose products or create course context. Availability requests are demonstrations only: they send no email and do not onboard a course.
+
+Current limitations: there is no map, authentication, saved-course implementation, production onboarding, course claiming, or connected availability-request persistence. Live discovery requires Google Cloud/Firebase configuration described in `docs/development/GOOGLE_PLACES_SETUP.md`.
