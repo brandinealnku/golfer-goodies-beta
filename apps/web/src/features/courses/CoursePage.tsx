@@ -17,6 +17,7 @@ import {
   type PendingOrderingIntent,
 } from '../../state/pending-ordering-intent';
 import { createDemoVerifier } from '../../services/course-eligibility';
+import { MANAGEMENT_CHANGED_EVENT } from '../../management/demo-management';
 
 export function getCourseRestriction(course: Course, expired: boolean) {
   if (course.availability === 'closed')
@@ -109,6 +110,12 @@ export function CoursePage() {
   const [pendingIntent, setPendingIntent] =
     useState<PendingOrderingIntent | null>(null);
   const [changePending, setChangePending] = useState(false);
+  const [managementRevision, setManagementRevision] = useState(0);
+  useEffect(() => {
+    const refresh = () => setManagementRevision((n) => n + 1);
+    window.addEventListener(MANAGEMENT_CHANGED_EVENT, refresh);
+    return () => window.removeEventListener(MANAGEMENT_CHANGED_EVENT, refresh);
+  }, []);
   const [selectedCategory, setSelectedCategory] = useState<
     ProductCategory | 'all'
   >('all');
@@ -139,6 +146,7 @@ export function CoursePage() {
     selectCourse,
     cart.cart,
     cart.itemCount,
+    managementRevision,
   ]);
   useEffect(() => {
     setSelectedProductId(null);

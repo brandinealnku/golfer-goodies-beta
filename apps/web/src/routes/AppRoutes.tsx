@@ -7,6 +7,11 @@ import { PlaceholderPage } from '../features/PlaceholderPage';
 import { CartPage } from '../features/cart/CartPage';
 import { OrdersPage } from '../features/orders/OrdersPage';
 import { OrderTrackingPage } from '../features/orders/OrderTrackingPage';
+import { AccountPage } from '../features/account/AccountPage';
+import {
+  CourseManagementPage,
+  ManageIndex,
+} from '../features/management/ManagementPages';
 const EmulatorDiagnosticsPage = lazy(() =>
   import('../features/development/EmulatorDiagnosticsPage').then((module) => ({
     default: module.EmulatorDiagnosticsPage,
@@ -48,22 +53,19 @@ export function AppRoutes() {
         <Route path="/checkout" element={<CartPage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/order/:orderId" element={<OrderTrackingPage />} />
+        <Route path="/account" element={<AccountPage />} />
+        <Route path="/manage" element={<ManageIndex />} />
         <Route
-          path="/account"
-          element={
-            <div className="page">
-              <span className="eyebrow">Golfer profile</span>
-              <h1>Account</h1>
-              <div className="card">
-                <h2>Your demo stays on this device</h2>
-                <p>
-                  No sign-in is required. Course context, cart, and
-                  demonstration orders are stored locally and validated before
-                  use.
-                </p>
-              </div>
-            </div>
-          }
+          path="/manage/course/:courseId"
+          element={<CourseManagementPage />}
+        />
+        <Route
+          path="/manage/course/:courseId/products"
+          element={<CourseManagementPage />}
+        />
+        <Route
+          path="/manage/course/:courseId/settings"
+          element={<CourseManagementPage />}
         />
         {[
           ['recent', 'Recent courses'],

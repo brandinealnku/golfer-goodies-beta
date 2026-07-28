@@ -50,6 +50,58 @@ for (const c of courses) {
     .set({ ...promotion, createdAt: now, updatedAt: now });
   writes++;
 }
+const memberships = [
+  ["summit-pines", "local-owner", "course_owner", "active"],
+  ["summit-pines", "local-manager", "course_manager", "active"],
+  ["summit-pines", "local-catalog-editor", "catalog_editor", "active"],
+  ["summit-pines", "local-fulfillment-staff", "fulfillment_staff", "active"],
+  ["cedar-bend-muni", "local-manager", "course_manager", "active"],
+  ["summit-pines", "local-suspended", "course_manager", "suspended"],
+];
+for (const u of users) {
+  await db.doc(`users/${u.uid}`).set({
+    version: 1,
+    uid: u.uid,
+    email: u.email,
+    displayName: u.displayName,
+    createdAt: now,
+    updatedAt: now,
+  });
+}
+for (const [courseId, uid, role, status] of memberships) {
+  await db.doc(`courses/${courseId}/members/${uid}`).set({
+    version: 1,
+    courseId,
+    userId: uid,
+    role,
+    status,
+    createdAt: now,
+    updatedAt: now,
+  });
+}
+await db.doc("courses/summit-pines/auditLog/seed-created").set({
+  version: 1,
+  id: "seed-created",
+  courseId: "summit-pines",
+  actorUid: "local-owner",
+  action: "course.seeded",
+  targetType: "course",
+  targetId: "summit-pines",
+  changedFields: [],
+  createdAt: now,
+});
+await db.doc("courseClaims/no-access-summit").set({
+  version: 1,
+  id: "no-access-summit",
+  courseId: "summit-pines",
+  requestedBy: "local-no-access",
+  requestedRole: "course_manager",
+  status: "submitted",
+  businessEmail: "no-access@example.com",
+  explanation: "Deterministic fictional request for local testing.",
+  createdAt: now,
+  updatedAt: now,
+});
 await db.doc("system/config").set({ projectId: PROJECT_ID, schemaVersion: 1 });
 await db.doc("system/seedStatus").set({
   status: "ready",

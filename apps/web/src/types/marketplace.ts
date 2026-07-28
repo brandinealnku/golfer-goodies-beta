@@ -100,6 +100,7 @@ export interface Product {
   category: ProductCategory;
   priceCents: number;
   available: boolean;
+  status?: 'active' | 'sold_out' | 'hidden' | 'draft';
   preparationMinutes: number;
   publiclyVisible: boolean;
   image: string;

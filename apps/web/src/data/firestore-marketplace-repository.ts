@@ -69,7 +69,8 @@ function productFromDoc(
     priceCents: d.priceCents,
     available: d.status === 'active',
     preparationMinutes: d.preparationMinutes,
-    publiclyVisible: d.status === 'active',
+    publiclyVisible: d.publiclyVisible === true,
+    status: d.status,
     image: d.image ?? 'images/demo/products/trail-mix.svg',
     imageAlt: d.imageAlt ?? `${d.name}, course item`,
     description: d.shortDescription ?? 'Available from this course storefront.',
@@ -82,7 +83,8 @@ export class FirestoreMarketplaceRepository implements MarketplaceRepository {
     const snap = await getDocs(
       query(
         collection(firestore, 'courses'),
-        where('status', '==', 'active'),
+        where('status', 'in', ['active', 'sold_out']),
+        where('publiclyVisible', '==', true),
         where('marketplaceVisible', '==', true),
       ),
     );

@@ -45,8 +45,12 @@ beforeEach(async () => {
       await setDoc(doc(db, `courses/active/products/${status}`), {
         status,
         priceCents: 500,
+        publiclyVisible: true,
       });
     await setDoc(doc(db, "users/alice"), {
+      version: 1,
+      uid: "alice",
+      email: "alice@example.com",
       displayName: "Alice",
       preferences: { theme: "light" },
       createdAt: Timestamp.fromMillis(1),
@@ -89,6 +93,9 @@ describe("Firestore deny-first rules", () => {
     await assertFails(getDoc(doc(bob, "users/alice")));
     await assertSucceeds(
       setDoc(doc(bob, "users/bob"), {
+        version: 1,
+        uid: "bob",
+        email: "bob@example.com",
         displayName: "Bob",
         preferences: { alerts: true },
         createdAt: Timestamp.fromMillis(1),
