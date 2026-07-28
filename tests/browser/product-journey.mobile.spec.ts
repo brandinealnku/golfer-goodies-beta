@@ -9,6 +9,26 @@ test("mobile 375x812: Summit Pines pointer journey uses the floating cart", asyn
   page,
 }) => {
   await page.goto("/#/course/summit-pines");
+  const courseUrl = page.url();
+  const allProducts = page.getByRole("button", { name: "All products" });
+  const foodProducts = page.getByRole("button", { name: "Food products" });
+  const drinkProducts = page.getByRole("button", { name: "Drink products" });
+  await foodProducts.click();
+  await expect(page).toHaveURL(courseUrl);
+  await expect(page.getByText("Fairway Club")).toBeVisible();
+  await expect(page.getByText("Citrus Sparkler")).toHaveCount(0);
+  await drinkProducts.click();
+  await expect(page).toHaveURL(courseUrl);
+  await expect(page.getByText("Citrus Sparkler")).toBeVisible();
+  await expect(page.getByText("Fairway Club")).toHaveCount(0);
+  await allProducts.click();
+  await expect(page.getByText("Fairway Club")).toBeVisible();
+  await expect(page.getByText("Citrus Sparkler")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Page not found" }),
+  ).toHaveCount(0);
+
+  await foodProducts.click();
   const productAction = page.getByRole("button", {
     name: "View Fairway Club details",
   });
@@ -35,6 +55,12 @@ test("mobile 375x812: Summit Pines pointer journey uses the floating cart", asyn
   await expect(floatingCart).toBeVisible();
   await expect(floatingCart).toContainText("1 item");
   await expect(floatingCart).toContainText("$10.95");
+  await drinkProducts.click();
+  await expect(page).toHaveURL(courseUrl);
+  await expect(
+    page.locator(".mobile-app-bar").getByLabel("Cart, 1 items"),
+  ).toBeVisible();
+  await expect(floatingCart).toBeVisible();
   await floatingCart.click();
 
   await expect(

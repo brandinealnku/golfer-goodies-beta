@@ -6,6 +6,7 @@ import { useCart } from '../../state/cart';
 import type {
   Course,
   Product,
+  ProductCategory,
   ProductModifierOption,
   VerificationMethod,
 } from '../../types/marketplace';
@@ -102,6 +103,9 @@ export function CoursePage() {
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [intentProductId, setIntentProductId] = useState<string | null>(null);
   const [changePending, setChangePending] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<
+    ProductCategory | 'all'
+  >('all');
   const productButtons = useRef(new Map<string, HTMLButtonElement>());
   useEffect(() => {
     let live = true;
@@ -134,7 +138,15 @@ export function CoursePage() {
     setSelectedProductId(null);
     setIntentProductId(null);
     setVerifyOpen(false);
+    setSelectedCategory('all');
   }, [courseId]);
+  useEffect(() => {
+    if (
+      selectedCategory !== 'all' &&
+      !products.some((product) => product.category === selectedCategory)
+    )
+      setSelectedCategory('all');
+  }, [products, selectedCategory]);
   if (course === undefined)
     return (
       <div className="page skeleton" role="status">
@@ -154,6 +166,16 @@ export function CoursePage() {
     context.mode === 'active_round' &&
     context.activeRound.courseId === course.id;
   const blocked = course.availability === 'closed' || course.orderingPaused;
+  const categories = [...new Set(products.map((product) => product.category))];
+  const categoryIsAvailable =
+    selectedCategory === 'all' || categories.includes(selectedCategory);
+  const effectiveCategory = categoryIsAvailable ? selectedCategory : 'all';
+  const displayedCategories =
+    effectiveCategory === 'all' ? categories : [effectiveCategory];
+  const displayedProducts =
+    effectiveCategory === 'all'
+      ? products
+      : products.filter((product) => product.category === effectiveCategory);
   const selectedProduct = products.find(
     (p) => p.id === selectedProductId && p.courseId === courseId,
   );
@@ -233,53 +255,96 @@ export function CoursePage() {
         </div>
       )}
       <nav className="category-nav" aria-label="Menu categories">
-        {[...new Set(products.map((p) => p.category))].map((c) => (
-          <a key={c} href={`#category-${c}`}>
-            {labelize(c)}
-          </a>
-        ))}
+        {(['all', ...categories] as const).map((category) => {
+          const selected = effectiveCategory === category;
+          const label = category === 'all' ? 'All' : labelize(category);
+          return (
+            <button
+              key={category}
+              type="button"
+              aria-label={`${label} products`}
+              aria-pressed={selected}
+              onClick={() => setSelectedCategory(category)}
+            >
+              <span className="category-selected-indicator" aria-hidden="true">
+                {selected ? '✓' : ''}
+              </span>
+              {label}
+            </button>
+          );
+        })}
       </nav>
       <div className="page menu">
         <div className="section-heading">
           <div>
             <span className="eyebrow">Your on-course concierge</span>
-            <h2>Clubhouse favorites</h2>
+            <h2>
+              {effectiveCategory === 'all'
+                ? 'Clubhouse favorites'
+                : `${labelize(effectiveCategory)} at ${course.name}`}
+            </h2>
           </div>
-          <p>Food, refreshments, and round-saving essentials.</p>
+          <p>
+            {effectiveCategory === 'all'
+              ? 'Food, refreshments, and round-saving essentials.'
+              : `Showing only ${labelize(effectiveCategory).toLowerCase()} products from this course.`}
+          </p>
         </div>
-        {[...new Set(products.map((p) => p.category))].map((category) => (
-          <section id={`category-${category}`} key={category}>
-            <h2>{labelize(category)}</h2>
-            <div className="product-grid">
-              {products
-                .filter((p) => p.category === category)
-                .map((p) => (
-                  <article className="product-card" key={p.id}>
-                    <button
-                      type="button"
-                      className="product-open"
-                      ref={(node) => {
-                        if (node) productButtons.current.set(p.id, node);
-                        else productButtons.current.delete(p.id);
-                      }}
-                      onClick={() => openProduct(p.id)}
-                      aria-label={`View ${p.name} details`}
-                    >
-                      <img src={p.image} alt={p.imageAlt} loading="lazy" />
-                      <span>{p.popular ? 'Popular' : ''}</span>
-                      <h3>{p.name}</h3>
-                      <p>{p.description}</p>
-                      <strong>{formatUsd(p.priceCents)}</strong>
-                      <span className="product-card-action" aria-hidden="true">
-                        {active && !blocked ? 'View and add' : 'View details'}
-                        {' →'}
-                      </span>
-                    </button>
-                  </article>
-                ))}
-            </div>
-          </section>
-        ))}
+        {displayedProducts.length === 0 ? (
+          <div className="category-empty state" role="status">
+            <h3>
+              {effectiveCategory === 'all'
+                ? 'No products available right now'
+                : `No ${labelize(effectiveCategory).toLowerCase()} items right now`}
+            </h3>
+            <p>Explore the complete course menu for another option.</p>
+            <button
+              type="button"
+              className="button"
+              onClick={() => setSelectedCategory('all')}
+            >
+              View all products
+            </button>
+          </div>
+        ) : (
+          displayedCategories.map((category) => (
+            <section id={`category-${category}`} key={category}>
+              <h2>{labelize(category)}</h2>
+              <div className="product-grid">
+                {displayedProducts
+                  .filter((p) => p.category === category)
+                  .map((p) => (
+                    <article className="product-card" key={p.id}>
+                      <button
+                        type="button"
+                        className="product-open"
+                        data-product-id={p.id}
+                        ref={(node) => {
+                          if (node) productButtons.current.set(p.id, node);
+                          else productButtons.current.delete(p.id);
+                        }}
+                        onClick={() => openProduct(p.id)}
+                        aria-label={`View ${p.name} details`}
+                      >
+                        <img src={p.image} alt={p.imageAlt} loading="lazy" />
+                        <span>{p.popular ? 'Popular' : ''}</span>
+                        <h3>{p.name}</h3>
+                        <p>{p.description}</p>
+                        <strong>{formatUsd(p.priceCents)}</strong>
+                        <span
+                          className="product-card-action"
+                          aria-hidden="true"
+                        >
+                          {active && !blocked ? 'View and add' : 'View details'}
+                          {' →'}
+                        </span>
+                      </button>
+                    </article>
+                  ))}
+              </div>
+            </section>
+          ))
+        )}
       </div>
       {selectedProduct && (
         <OverlayErrorBoundary

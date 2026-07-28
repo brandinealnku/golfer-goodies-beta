@@ -50,6 +50,84 @@ it('gives every product card a visible action and supports keyboard opening', as
   await user.keyboard('{Enter}');
   expect(screen.getByRole('dialog', { name: 'Citrus Sparkler' })).toBeVisible();
 });
+it('filters course products with accessible chips without changing route, round, or cart', async () => {
+  const now = new Date();
+  localStorage.setItem(
+    'golfer-goodies.course-context.v1',
+    JSON.stringify({
+      selectedCourseId: 'summit-pines',
+      mode: 'active_round',
+      activeRound: {
+        courseId: 'summit-pines',
+        verificationMethod: 'simulated_location',
+        verifiedAt: now.toISOString(),
+        expiresAt: new Date(now.getTime() + 60 * 60_000).toISOString(),
+      },
+    }),
+  );
+  localStorage.setItem(
+    'golfer-goodies.cart.v1',
+    JSON.stringify({
+      version: 1,
+      courseId: 'summit-pines',
+      updatedAt: now.toISOString(),
+      items: [
+        {
+          id: 'summit-pines-sparkler-standard',
+          productId: 'summit-pines-sparkler',
+          name: 'Citrus Sparkler',
+          unitPriceCents: 395,
+          quantity: 1,
+          image: 'images/demo/products/sparkler.svg',
+          selectedModifiers: [],
+          instructions: '',
+        },
+      ],
+    }),
+  );
+  const user = userEvent.setup();
+  route('#/course/summit-pines');
+  await screen.findByRole('button', { name: 'All products' });
+  const routeBefore = window.location.hash;
+  const all = screen.getByRole('button', { name: 'All products' });
+  const food = screen.getByRole('button', { name: 'Food products' });
+  const drink = screen.getByRole('button', { name: 'Drink products' });
+  expect(all).toHaveAttribute('aria-pressed', 'true');
+  expect(document.querySelectorAll('.category-nav a')).toHaveLength(0);
+  expect(food).not.toHaveAttribute('href');
+
+  await user.click(food);
+  expect(food).toHaveAttribute('aria-pressed', 'true');
+  expect(all).toHaveAttribute('aria-pressed', 'false');
+  expect(screen.getByText('Fairway Club')).toBeVisible();
+  expect(screen.queryByText('Citrus Sparkler')).not.toBeInTheDocument();
+
+  drink.focus();
+  await user.keyboard('{Enter}');
+  expect(drink).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByText('Citrus Sparkler')).toBeVisible();
+  expect(screen.queryByText('Fairway Club')).not.toBeInTheDocument();
+
+  all.focus();
+  await user.keyboard(' ');
+  expect(all).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByText('Fairway Club')).toBeVisible();
+  expect(screen.getByText('Citrus Sparkler')).toBeVisible();
+  expect(window.location.hash).toBe(routeBefore);
+  expect(window.location.hash).toBe('#/course/summit-pines');
+  expect(
+    screen.queryByRole('heading', { name: 'Page not found' }),
+  ).not.toBeInTheDocument();
+  expect(screen.getAllByText(/Active at Summit Pines/).length).toBeGreaterThan(
+    0,
+  );
+  expect(screen.getAllByLabelText('Cart, 1 items')).toHaveLength(2);
+  expect(
+    [...document.querySelectorAll<HTMLElement>('.product-open')].every(
+      (element) => element.dataset.productId?.startsWith('summit-pines-'),
+    ),
+  ).toBe(true);
+});
 it('opens the same product from its image, name, and visible action', async () => {
   const user = userEvent.setup();
   route('#/course/summit-pines');

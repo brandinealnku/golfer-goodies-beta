@@ -593,7 +593,12 @@ select {
   background: var(--surface-warm);
   scrollbar-width: thin;
 }
-.category-nav a {
+.category-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  border: 1px solid transparent;
   white-space: nowrap;
   padding: 0.6rem 0.85rem;
   border-radius: var(--radius-pill);
@@ -601,6 +606,22 @@ select {
   color: var(--text-primary);
   font-weight: 700;
   text-decoration: none;
+  cursor: pointer;
+}
+.category-nav button[aria-pressed='true'] {
+  border-color: var(--brand-pine);
+  background: var(--brand-pine);
+  color: #fff;
+  box-shadow: var(--shadow-card);
+}
+.category-selected-indicator {
+  display: inline-block;
+  width: 1em;
+  font-weight: 900;
+}
+.category-nav button:focus-visible {
+  outline: 3px solid var(--color-info);
+  outline-offset: 2px;
 }
 .menu section {
   scroll-margin-top: 210px;
