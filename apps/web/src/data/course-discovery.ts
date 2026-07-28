@@ -74,7 +74,8 @@ const summaries: MarketplaceCourseSummary[] = [
   })),
 ];
 export class DemoCourseDiscoveryProvider implements CourseDiscoveryProvider {
-  async searchNearby(_input?: NearbyCourseSearch) {
+  async searchNearby(input: NearbyCourseSearch) {
+    void input;
     return structuredClone(fixtures);
   }
   async searchByText({ query }: TextCourseSearch) {
