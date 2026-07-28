@@ -43,7 +43,9 @@ export interface CourseManagementRepository {
     input: Omit<CourseClaim, 'id' | 'requestedBy' | 'status' | 'createdAt'>,
   ): Promise<void>;
 }
-export class DemoCourseManagementRepository implements CourseManagementRepository {
+export class DemoCourseManagementRepository
+  implements CourseManagementRepository
+{
   async getMemberships() {
     return [];
   }
@@ -94,7 +96,9 @@ export class DemoCourseManagementRepository implements CourseManagementRepositor
     submitDemoClaim(user, input);
   }
 }
-export class EmulatorCourseManagementRepository implements CourseManagementRepository {
+export class EmulatorCourseManagementRepository
+  implements CourseManagementRepository
+{
   async getMemberships(user: AuthenticatedUser) {
     const [{ firestore }, { doc, getDoc }] = await Promise.all([
       import('../firebase/client').then((m) => m.getFirebaseServices()),
@@ -219,7 +223,9 @@ export class EmulatorCourseManagementRepository implements CourseManagementRepos
     await this.call('submitCourseClaim', input);
   }
 }
-export class ConnectedCourseManagementRepository implements CourseManagementRepository {
+export class ConnectedCourseManagementRepository
+  implements CourseManagementRepository
+{
   private unavailable(): never {
     throw new Error(
       'Trusted connected management services are not configured.',

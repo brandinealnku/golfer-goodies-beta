@@ -21,9 +21,9 @@ function read(): DemoOrder[] {
       ? v.filter((o): o is DemoOrder =>
           Boolean(
             o &&
-            typeof o === 'object' &&
-            (o as DemoOrder).version === 1 &&
-            typeof (o as DemoOrder).id === 'string',
+              typeof o === 'object' &&
+              (o as DemoOrder).version === 1 &&
+              typeof (o as DemoOrder).id === 'string',
           ),
         )
       : [];
