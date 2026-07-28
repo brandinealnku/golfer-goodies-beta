@@ -213,6 +213,10 @@ export function CoursePage() {
                       <h3>{p.name}</h3>
                       <p>{p.description}</p>
                       <strong>{formatUsd(p.priceCents)}</strong>
+                      <span className="product-card-action" aria-hidden="true">
+                        {active && !blocked ? 'View and add' : 'View details'}
+                        {' →'}
+                      </span>
                     </button>
                   </article>
                 ))}
@@ -291,6 +295,7 @@ function ProductDetailSheet({
   const [quantity, setQuantity] = useState(1);
   const [selected, setSelected] = useState<ProductModifierOption[]>([]);
   const [instructions, setInstructions] = useState('');
+  const firstIncompleteRef = useRef<HTMLFieldSetElement>(null);
   useEffect(() => {
     const d = ref.current;
     if (typeof d?.showModal === 'function') d.showModal();
@@ -302,6 +307,30 @@ function ProductDetailSheet({
   const total =
     (product.priceCents + selected.reduce((n, o) => n + o.priceCents, 0)) *
     quantity;
+  const incompleteRequiredGroup = product.modifiers?.find(
+    (group) =>
+      active &&
+      group.required &&
+      !group.options.some((option) =>
+        selected.some((selection) => selection.id === option.id),
+      ),
+  );
+  const addDescriptionIds = [
+    !product.available ? 'product-unavailable-message' : '',
+    incompleteRequiredGroup
+      ? `modifier-${incompleteRequiredGroup.id}-requirement`
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const attemptAdd = () => {
+    if (!product.available) return;
+    if (incompleteRequiredGroup) {
+      firstIncompleteRef.current?.focus();
+      return;
+    }
+    onAdd(quantity, selected, instructions);
+  };
   return (
     <dialog
       ref={ref}
@@ -331,30 +360,70 @@ function ProductDetailSheet({
           <strong>{formatUsd(product.priceCents)}</strong> · Ready in about{' '}
           {product.preparationMinutes} min
         </p>
-        {product.modifiers?.map((g) => (
-          <fieldset key={g.id}>
-            <legend>
-              {g.name}
-              {g.required ? ' (required)' : ''}
-            </legend>
-            {g.options.map((o) => (
-              <label className="choice" key={o.id}>
-                <input
-                  type="radio"
-                  name={g.id}
-                  checked={selected.some((s) => s.id === o.id)}
-                  onChange={() =>
-                    setSelected((s) => [
-                      ...s.filter((v) => !g.options.some((x) => x.id === v.id)),
-                      o,
-                    ])
-                  }
-                />
-                {o.name} {o.priceCents ? `+${formatUsd(o.priceCents)}` : ''}
-              </label>
-            ))}
-          </fieldset>
-        ))}
+        {!product.available && (
+          <p id="product-unavailable-message" className="error-message">
+            This item is unavailable and cannot be added right now.
+          </p>
+        )}
+        {product.modifiers?.map((g) => {
+          const missing =
+            active &&
+            g.required &&
+            !g.options.some((option) =>
+              selected.some((selection) => selection.id === option.id),
+            );
+          const requirementId = `modifier-${g.id}-requirement`;
+          return (
+            <fieldset
+              key={g.id}
+              ref={
+                g.id === incompleteRequiredGroup?.id
+                  ? firstIncompleteRef
+                  : undefined
+              }
+              tabIndex={-1}
+              aria-describedby={missing ? requirementId : undefined}
+              className={
+                missing
+                  ? 'modifier-group modifier-group-required'
+                  : 'modifier-group'
+              }
+            >
+              <legend>
+                {g.name}
+                {g.required ? ' (required)' : ''}
+              </legend>
+              {g.options.map((o) => (
+                <label className="choice" key={o.id}>
+                  <input
+                    type="radio"
+                    name={g.id}
+                    checked={selected.some((s) => s.id === o.id)}
+                    onChange={() =>
+                      setSelected((s) => [
+                        ...s.filter(
+                          (v) => !g.options.some((x) => x.id === v.id),
+                        ),
+                        o,
+                      ])
+                    }
+                  />
+                  {o.name} {o.priceCents ? `+${formatUsd(o.priceCents)}` : ''}
+                </label>
+              ))}
+              <p
+                id={requirementId}
+                className="modifier-requirement"
+                role="status"
+                aria-live="polite"
+              >
+                {missing
+                  ? `Choose ${g.name.replace(/^Choose /i, '').toLowerCase()} to continue.`
+                  : ''}
+              </p>
+            </fieldset>
+          );
+        })}
         <label className="field">
           Special instructions
           <textarea
@@ -373,17 +442,9 @@ function ProductDetailSheet({
         {active ? (
           <button
             className="button"
-            disabled={
-              !product.available ||
-              Boolean(
-                product.modifiers?.some(
-                  (g) =>
-                    g.required &&
-                    !g.options.some((o) => selected.some((s) => s.id === o.id)),
-                ),
-              )
-            }
-            onClick={() => onAdd(quantity, selected, instructions)}
+            aria-disabled={!product.available}
+            aria-describedby={addDescriptionIds || undefined}
+            onClick={attemptAdd}
           >
             Add · {formatUsd(total)}
           </button>
@@ -459,6 +520,8 @@ function RoundVerificationSheet({
         aria-label="Verification method"
       >
         <button
+          type="button"
+          aria-pressed={method === 'simulated_location'}
           onClick={() => {
             setMethod('simulated_location');
             setError('');
@@ -467,6 +530,8 @@ function RoundVerificationSheet({
           Current location
         </button>
         <button
+          type="button"
+          aria-pressed={method === 'demo_qr'}
           onClick={() => {
             setMethod('demo_qr');
             setError('');
@@ -475,6 +540,8 @@ function RoundVerificationSheet({
           Demo QR
         </button>
         <button
+          type="button"
+          aria-pressed={method === 'demo_course_code'}
           onClick={() => {
             setMethod('demo_course_code');
             setError('');
@@ -484,14 +551,36 @@ function RoundVerificationSheet({
         </button>
       </div>
       {method === 'simulated_location' ? (
-        <p className="alert">
-          Demo mode simulates a one-time location check; it never contacts
-          geolocation.
-        </p>
+        <div className="alert">
+          <p>
+            Demo mode simulates a one-time location check; it never contacts
+            geolocation.
+          </p>
+          {course.demoLocationResult !== 'eligible' && (
+            <div className="verification-recovery" role="status">
+              <strong>This demo course requires a non-location method.</strong>
+              <p>Choose Demo QR or Course code above to continue.</p>
+              <dl>
+                <dt>Fictional QR token</dt>
+                <dd>
+                  <code>{course.demoQrToken}</code>
+                </dd>
+                <dt>Fictional course code</dt>
+                <dd>
+                  <code>{course.demoCode}</code>
+                </dd>
+              </dl>
+            </div>
+          )}
+        </div>
       ) : (
-        <label className="field">
+        <label className="field" htmlFor="verification-entry">
           {method === 'demo_qr' ? 'Demo QR token' : 'Demo course code'}
           <input
+            id="verification-entry"
+            aria-label={
+              method === 'demo_qr' ? 'Demo QR token' : 'Demo course code'
+            }
             value={entry}
             onChange={(e) => setEntry(e.target.value)}
             aria-invalid={Boolean(error)}
