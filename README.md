@@ -1,6 +1,6 @@
 # Golfer Goodies v0.2
 
-Golfer Goodies is a fictional marketplace demonstration. The unchanged v0.1 beta remains at the repository root and in `legacy/v0.1/`. Phase 3 adds a **local-only Firebase Emulator Suite foundation** to the React/Vite app in `apps/web`; no production Firebase project, deployment, real authentication workflow, real customer/course data, orders, Stripe, or payment processing exists.
+Golfer Goodies is a fictional marketplace demonstration. The v0.1 beta is retained at the repository root and in `legacy/v0.1/`, but it is no longer deployed to GitHub Pages. Phase 3 adds a **local-only Firebase Emulator Suite foundation** to the React/Vite app in `apps/web`; no production Firebase project, deployment, real authentication workflow, real customer/course data, orders, Stripe, or payment processing exists.
 
 ## Course-first marketplace (Phase 2.5)
 
@@ -44,7 +44,7 @@ No Firebase login or production credential is needed.
 npm run dev:demo
 ```
 
-Demo mode uses the in-bundle fictional repository, performs no Firebase initialization, retains hash routes and relative assets, and remains suitable for static GitHub Pages. The root Pages workflow still serves v0.1.
+Demo mode uses the in-bundle fictional repository, performs no Firebase initialization, retains hash routes and relative assets, and remains suitable for static GitHub Pages. GitHub Pages builds the React application in demo mode and publishes only `apps/web/dist`. The retained root and `legacy/v0.1/` copies of v0.1 are compatibility references and are not part of the deployed artifact.
 
 ## Complete local emulator workflow
 

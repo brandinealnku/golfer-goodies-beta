@@ -40,3 +40,31 @@ test('demo UI never calls browser geolocation', async () => {
     /navigator\.geolocation|getCurrentPosition|watchPosition/,
   );
 });
+
+const webDirectory = resolve(testDirectory, '..');
+const webFile = (relativePath) => {
+  const filePath = resolve(webDirectory, relativePath);
+  assert.ok(
+    filePath.startsWith(`${webDirectory}${sep}`),
+    `Web app path must remain inside ${webDirectory}`,
+  );
+  return readFile(filePath, 'utf8');
+};
+
+test('service worker upgrades old caches and uses network-first navigation', async () => {
+  const [serviceWorker, registration, viteConfig] = await Promise.all([
+    webFile('public/service-worker.js'),
+    source('main.tsx'),
+    webFile('vite.config.ts'),
+  ]);
+
+  assert.match(serviceWorker, /golfer-goodies-v03-shell-/);
+  assert.match(serviceWorker, /self\.skipWaiting\(\)/);
+  assert.match(serviceWorker, /self\.clients\.claim\(\)/);
+  assert.match(serviceWorker, /key\.startsWith\(CACHE_PREFIX\)/);
+  assert.match(serviceWorker, /event\.request\.mode === 'navigate'/);
+  assert.match(serviceWorker, /fetch\(event\.request\)[\s\S]*\.catch\(/);
+  assert.match(serviceWorker, /'\.\/index\.html'/);
+  assert.match(registration, /updateViaCache: 'none'/);
+  assert.match(viteConfig, /base: '\.\/'/);
+});
