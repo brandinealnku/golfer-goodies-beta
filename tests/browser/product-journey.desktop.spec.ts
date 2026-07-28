@@ -41,8 +41,13 @@ test("desktop 1440x900: Summit Pines journey uses the app-bar cart", async ({
   await expect(appBarCart).toBeVisible();
   await appBarCart.click();
 
+  await expect(page).toHaveURL(/#\/cart$/);
   await expect(
-    page.getByRole("heading", { name: /Summit Pines Resort/ }),
+    page.getByRole("heading", {
+      name: "Summit Pines Resort",
+      exact: true,
+      level: 1,
+    }),
   ).toBeVisible();
   const item = page.locator(".cart-item");
   await expect(item).toContainText("Fairway Club");

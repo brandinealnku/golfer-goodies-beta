@@ -63,8 +63,13 @@ test("mobile 375x812: Summit Pines pointer journey uses the floating cart", asyn
   await expect(floatingCart).toBeVisible();
   await floatingCart.click();
 
+  await expect(page).toHaveURL(/#\/cart$/);
   await expect(
-    page.getByRole("heading", { name: /Summit Pines Resort/ }),
+    page.getByRole("heading", {
+      name: "Summit Pines Resort",
+      exact: true,
+      level: 1,
+    }),
   ).toBeVisible();
   const item = page.locator(".cart-item");
   await expect(item).toContainText("Fairway Club");
@@ -109,8 +114,13 @@ test("mobile 375x812: Cedar Bend course-code journey uses the floating cart", as
   await expect(floatingCart).toContainText("$4.95");
   await floatingCart.click();
 
+  await expect(page).toHaveURL(/#\/cart$/);
   await expect(
-    page.getByRole("heading", { name: /Cedar Bend Municipal/ }),
+    page.getByRole("heading", {
+      name: "Cedar Bend Municipal",
+      exact: true,
+      level: 1,
+    }),
   ).toBeVisible();
   const item = page.locator(".cart-item");
   await expect(item).toContainText("Citrus Sparkler");
