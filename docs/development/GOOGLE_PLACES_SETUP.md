@@ -1,0 +1,7 @@
+# Google Places setup
+
+Connected mode needs a deployed second-generation `discoverGolfCourses` HTTPS Function, `VITE_DISCOVERY_FUNCTION_URL` set to that function URL, and the server-side Firebase secret `GOOGLE_PLACES_API_KEY`. Never use a `VITE_` variable for the key. Use a separate Maps Platform key restricted to Places API (New), the appropriate server/function egress restrictions, quotas, alerts, and a conservative budget. Do not deploy without authorization.
+
+The function accepts only `nearby` or `text`. Nearby fixes `includedTypes` to `golf_course`, ranks by distance, defaults to 25 km, caps radius at 50 km, and returns at most 20. Text search adds a golf-course constraint and strict type filtering. Both use the explicit mask: `places.id`, `places.displayName`, `places.shortFormattedAddress`, `places.location`, `places.businessStatus`, `places.googleMapsUri`, and `places.primaryType`. Ratings, reviews, photos, phones, websites, hours, and wildcard masks are excluded to control cost and data retention.
+
+Google attribution is rendered whenever Google results appear without a map. Automated tests use demo/emulator providers only. Verify key restrictions, CORS allow-list policy, billing alerts, attribution requirements, and Places terms before production. Provider content should not be permanently cached; internal data stores the Place ID identity. A future ID-refresh/admin remediation job should follow Google's current Place ID guidance.

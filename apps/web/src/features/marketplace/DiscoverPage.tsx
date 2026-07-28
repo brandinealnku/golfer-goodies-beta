@@ -1,121 +1,282 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Badge, Card, PageHeader, TextInput } from '../../components/ui';
+import { environment } from '../../config/environment';
 import {
-  Badge,
-  Card,
-  EmptyState,
-  LoadingState,
-  PageHeader,
-  StatusBadge,
-  TextInput,
-} from '../../components/ui';
-import { getMarketplaceRepository } from '../../data/marketplace-repository';
-import type { Course } from '../../types/marketplace';
+  getCourseDiscoveryProvider,
+  matchCourses,
+} from '../../data/course-discovery';
+import type { CourseDiscoveryResult } from '../../types/marketplace';
 import { labelize } from '../../utils/format';
-import { EmulatorError } from '../../components/EmulatorError';
-import { formatUsd } from '../../utils/format';
-import { useCourseContext } from '../../state/course-context';
-export const filterCourses = (courses: Course[], query: string) => {
-  const q = query.trim().toLowerCase();
-  return courses.filter((c) =>
-    `${c.name} ${c.city} ${c.state}`.toLowerCase().includes(q),
-  );
+
+type LocationState =
+  | 'not-requested'
+  | 'requesting'
+  | 'denied'
+  | 'timed-out'
+  | 'unavailable'
+  | 'poor-accuracy'
+  | 'ready'
+  | 'error';
+const message: Record<LocationState, string> = {
+  'not-requested':
+    'Location has not been requested. Manual search is always available.',
+  requesting: 'Requesting your location…',
+  denied: 'Location permission is unavailable. Search manually below.',
+  'timed-out':
+    'Location took too long to respond. Search manually or try again.',
+  unavailable:
+    'Location is unavailable in this browser. Search manually below.',
+  'poor-accuracy':
+    'Your approximate location was used; distances may be less precise.',
+  ready: 'Nearby golf courses loaded.',
+  error:
+    'Course discovery is unavailable right now. Search again or try later.',
 };
 export function DiscoverPage() {
-  const { context } = useCourseContext();
-  const [courses, setCourses] = useState<Course[]>();
-  const [error, setError] = useState('');
+  const [locationState, setLocationState] =
+    useState<LocationState>('not-requested');
+  const [results, setResults] = useState<CourseDiscoveryResult[]>([]);
+  const [manual, setManual] = useState<CourseDiscoveryResult[]>([]);
   const [query, setQuery] = useState('');
-  const [attempt, setAttempt] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const provider = getCourseDiscoveryProvider();
   useEffect(() => {
-    let active = true;
-    getMarketplaceRepository()
-      .then((repository) => repository.getCourses())
-      .then((nextCourses) => {
-        if (active) setCourses(nextCourses);
-      })
-      .catch(() => {
-        if (active) {
-          setError('The fictional course catalog could not be loaded.');
+    if (navigator.permissions?.query)
+      void navigator.permissions
+        .query({ name: 'geolocation' })
+        .then((p) => {
+          if (p.state === 'denied') setLocationState('denied');
+        })
+        .catch(() => undefined);
+  }, []);
+  const near = () => {
+    if (environment.mode === 'demo') {
+      setLoading(true);
+      void provider
+        .searchNearby({ latitude: 0, longitude: 0 })
+        .then((found) => {
+          setResults(matchCourses(found));
+          setLocationState('ready');
+        })
+        .catch(() => setLocationState('error'))
+        .finally(() => setLoading(false));
+      return;
+    }
+    if (!navigator.geolocation) {
+      setLocationState('unavailable');
+      return;
+    }
+    setLocationState('requesting');
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const found = matchCourses(
+            await provider.searchNearby({
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+              radiusMeters: 25000,
+            }),
+          );
+          setResults(found);
+          setLocationState(coords.accuracy > 5000 ? 'poor-accuracy' : 'ready');
+        } catch {
+          setLocationState('error');
+        } finally {
+          setLoading(false);
         }
-      });
-    return () => {
-      active = false;
-    };
-  }, [attempt]);
-  const shown = useMemo(
-    () => filterCourses(courses ?? [], query),
-    [courses, query],
-  );
+      },
+      (error) => {
+        setLocationState(
+          error.code === 1
+            ? 'denied'
+            : error.code === 3
+              ? 'timed-out'
+              : 'unavailable',
+        );
+        setLoading(false);
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+    );
+  };
+  const search = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const term = query.trim();
+    setManual([]);
+    if (!term) return;
+    setLoading(true);
+    try {
+      setManual(matchCourses(await provider.searchByText({ query: term })));
+    } catch {
+      setLocationState('error');
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
-    <div className="page">
-      <PageHeader title="Find a participating course">
-        <Badge>Course-first demo</Badge>
+    <div className="page discovery-page">
+      <PageHeader title="Where are you playing today?">
+        <Badge>
+          {environment.mode === 'demo'
+            ? 'Fictional demonstration'
+            : `${environment.mode} discovery`}
+        </Badge>
       </PageHeader>
       <p>
-        Choose a fictional course before browsing its menu. Individual products
-        are never shown without course context.
+        Choose an order-enabled course before viewing products. Discovering a
+        course does not authorize ordering.
       </p>
-      {context.mode === 'none' && (
-        <div className="alert" role="status">
-          <strong>No course selected.</strong> Search or choose a participating
-          course to see its menu.
+      <section className="location-panel" aria-labelledby="nearby-heading">
+        <h2 id="nearby-heading">Courses near you</h2>
+        <p>
+          We use your location once to find nearby golf courses. We do not
+          continuously track or save your precise location.
+        </p>
+        <button
+          className="button"
+          onClick={near}
+          aria-describedby="location-status"
+          disabled={loading}
+        >
+          Find courses near me
+        </button>
+        <p id="location-status" role="status" aria-live="polite">
+          {message[locationState]}
+        </p>
+      </section>
+      <form className="search-panel" onSubmit={search}>
+        <TextInput
+          label="Search by course name, city, or ZIP"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <button className="button" disabled={loading}>
+          Search courses
+        </button>
+      </form>
+      <p>
+        <Link to="/recent">Recent courses</Link> ·{' '}
+        <span>Saved courses (not yet available)</span>
+      </p>
+      {loading && (
+        <div className="skeleton" role="status">
+          Finding golf courses…
         </div>
       )}
-      <TextInput
-        label="Search courses by name, city, or state"
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
+      <Results
+        title="Ordering available nearby"
+        items={results.filter((r) => r.orderingAvailable)}
       />
-      {error ? (
-        <EmulatorError
-          message={error}
-          onRetry={() => {
-            setError('');
-            setCourses(undefined);
-            setAttempt((value) => value + 1);
-          }}
-        />
-      ) : !courses ? (
-        <LoadingState />
-      ) : shown.length === 0 ? (
-        <EmptyState message="Try another course, city, or state." />
+      {results.length > 0 && !results.some((r) => r.orderingAvailable) && (
+        <p className="alert">
+          No order-enabled courses were found nearby. Other real courses are
+          listed below.
+        </p>
+      )}
+      <Results
+        title="Other nearby golf courses"
+        items={results.filter((r) => !r.orderingAvailable)}
+      />
+      {manual.length === 0 && query.trim() && !loading ? (
+        <p role="status">
+          No courses match that manual search. Try a course, city, state, or
+          ZIP.
+        </p>
       ) : (
-        <section className="grid" aria-label="Fictional courses">
-          {shown.map((c) => (
-            <Card key={c.id}>
-              <div className="card-badges">
-                <StatusBadge status={c.availability} />
-                {c.verified && <Badge>✓ Verified Course</Badge>}
-              </div>
-              <h2>{c.name}</h2>
-              <p>
-                {c.city}, {c.state}
-              </p>
-              <p>{c.description}</p>
-              <dl>
-                <dt>Fulfillment</dt>
-                <dd>{c.fulfillmentMethods.map(labelize).join(', ')}</dd>
-                <dt>Estimate</dt>
-                <dd>{c.estimatedMinutes} minutes</dd>
-                <dt>Minimum order</dt>
-                <dd>{formatUsd(c.minimumOrderCents)}</dd>
-                <dt>Menu summary</dt>
-                <dd>Food, alcohol-free drinks, gear and turn pickup</dd>
-              </dl>
-              {c.promotion && (
-                <p>
-                  <strong>{c.promotion}</strong>
-                </p>
-              )}
-              <Link className="button" to={`/course/${c.id}`}>
-                View {c.name}
-              </Link>
-            </Card>
-          ))}
-        </section>
+        <Results title="Manual search results" items={manual} />
+      )}
+      {(results.some((r) => r.discoveredCourse.provider === 'google_places') ||
+        manual.some(
+          (r) => r.discoveredCourse.provider === 'google_places',
+        )) && (
+        <p
+          className="google-attribution"
+          aria-label="Google Places attribution"
+        >
+          Google
+        </p>
       )}
     </div>
+  );
+}
+function Results({
+  title,
+  items,
+}: {
+  title: string;
+  items: CourseDiscoveryResult[];
+}) {
+  if (!items.length) return null;
+  return (
+    <section aria-labelledby={title.replaceAll(' ', '-')}>
+      <h2 id={title.replaceAll(' ', '-')}>{title}</h2>
+      <div className="grid">
+        {items.map(
+          ({
+            discoveredCourse: c,
+            marketplaceCourse: m,
+            orderingAvailable,
+          }) => (
+            <Card key={`${c.provider}:${c.providerPlaceId}`}>
+              <p
+                className={`availability ${orderingAvailable ? 'available' : 'unavailable'}`}
+              >
+                {orderingAvailable
+                  ? 'Ordering available'
+                  : 'Ordering not available here yet'}
+              </p>
+              <h3>{c.name}</h3>
+              {c.approximateDistanceMiles !== undefined && (
+                <p>
+                  Approximately {c.approximateDistanceMiles.toFixed(1)} miles
+                  away
+                </p>
+              )}
+              <p>{c.formattedAddress}</p>
+              {c.businessStatus && c.businessStatus !== 'OPERATIONAL' && (
+                <p>{labelize(c.businessStatus)}</p>
+              )}
+              {orderingAvailable && m ? (
+                <>
+                  <p>
+                    {m.fulfillmentMethods.map(labelize).join(', ')}
+                    {m.estimatedMinutes
+                      ? ` · About ${m.estimatedMinutes} minutes`
+                      : ''}
+                  </p>
+                  {m.promotion && (
+                    <p>
+                      <strong>{m.promotion}</strong>
+                    </p>
+                  )}
+                  <Link className="button" to={`/course/${m.id}`}>
+                    View course
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    className="button"
+                    to={`/discover/course/${encodeURIComponent(c.providerPlaceId)}`}
+                    state={{ course: c }}
+                  >
+                    Request Golfer Goodies
+                  </Link>
+                  {c.googleMapsUri ? (
+                    <a href={c.googleMapsUri} target="_blank" rel="noreferrer">
+                      Open {c.name} in Google Maps (new tab)
+                    </a>
+                  ) : (
+                    <p>Google Maps link unavailable.</p>
+                  )}
+                </>
+              )}
+            </Card>
+          ),
+        )}
+      </div>
+    </section>
   );
 }

@@ -12,15 +12,30 @@ beforeEach(() => {
   window.history.replaceState(null, '', '#/');
 });
 
-it('discovery shows courses, course facts, and no individual products', async () => {
+it('requires intentional discovery, then shows courses without products', async () => {
+  const user = userEvent.setup();
   route('#/discover');
-  expect(await screen.findByText('Summit Pines Resort')).toBeInTheDocument();
+  expect(
+    screen.getByRole('heading', { name: 'Where are you playing today?' }),
+  ).toBeInTheDocument();
+  const locationAction = screen.getByRole('button', {
+    name: 'Find courses near me',
+  });
+  expect(locationAction).toBeEnabled();
+  expect(screen.queryByText('Summit Pines Resort')).not.toBeInTheDocument();
+  expect(screen.queryByText('Clubhouse Sandwich')).not.toBeInTheDocument();
   expect(
     screen.getByRole('navigation', { name: 'Golfer navigation' }),
   ).toHaveTextContent('Find Course');
+
+  await user.click(locationAction);
+
+  expect(await screen.findByText('Summit Pines Resort')).toBeInTheDocument();
+  expect(
+    screen.getByRole('heading', { name: 'Ordering available nearby' }),
+  ).toBeInTheDocument();
   expect(screen.queryByText('Clubhouse Sandwich')).not.toBeInTheDocument();
   expect(screen.queryByRole('link', { name: /menu/i })).not.toBeInTheDocument();
-  expect(screen.getByRole('status')).toHaveTextContent('No course selected');
 });
 it('selects a course, scopes products, blocks ordering, and changes navigation', async () => {
   route('#/course/summit-pines');
