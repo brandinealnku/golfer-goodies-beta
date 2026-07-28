@@ -125,7 +125,7 @@ export function DiscoverPage() {
           </Badge>
         </PageHeader>
         <p>
-          Find your course, start your round, and order food, drinks, and golf
+          Find your course, browse its menu, and order food, drinks, and golf
           essentials.
         </p>
         <button
@@ -216,7 +216,7 @@ export function DiscoverPage() {
             <span>Search manually or choose a one-time nearby lookup.</span>
           </li>
           <li>
-            <strong>Start your round</strong>
+            <strong>Browse the course menu</strong>
             <span>Use a safe demo verification method.</span>
           </li>
           <li>

@@ -1,36 +1,121 @@
 import {
   createContext,
   type ReactNode,
-  useContext,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useState,
 } from 'react';
 import type {
-  ActiveRound,
   CourseContext,
+  OrderingSession,
   VerificationMethod,
 } from '../types/marketplace';
 
-const STORAGE_KEY = 'golfer-goodies.course-context.v1';
-export const ACTIVE_ROUND_MINUTES = 120;
+export const COURSE_CONTEXT_STORAGE_KEY = 'golfer-goodies.course-context.v1';
+export const ORDERING_SESSION_MINUTES = 120;
+
+const methods: VerificationMethod[] = [
+  'geolocation',
+  'simulated_location',
+  'course_qr',
+  'course_code',
+];
+
+function validSession(value: unknown): value is OrderingSession {
+  if (!value || typeof value !== 'object') return false;
+  const session = value as Partial<OrderingSession>;
+  return (
+    session.version === 1 &&
+    typeof session.id === 'string' &&
+    typeof session.courseId === 'string' &&
+    methods.includes(session.verificationMethod as VerificationMethod) &&
+    typeof session.verifiedAt === 'string' &&
+    Number.isFinite(Date.parse(session.verifiedAt)) &&
+    typeof session.expiresAt === 'string' &&
+    Number.isFinite(Date.parse(session.expiresAt)) &&
+    ['active', 'expired', 'revoked'].includes(session.status ?? '') &&
+    ['high', 'fallback', 'demo'].includes(session.confidence ?? '')
+  );
+}
 
 export function normalizeCourseContext(
-  value: CourseContext,
+  value: unknown,
   now = Date.now(),
 ): CourseContext {
-  if (
-    value.mode === 'active_round' &&
-    Date.parse(value.activeRound.expiresAt) <= now
-  ) {
+  if (!value || typeof value !== 'object')
+    return { selectedCourseId: null, mode: 'none' };
+  const candidate = value as Record<string, unknown>;
+  if (candidate.mode === 'none')
+    return { selectedCourseId: null, mode: 'none' };
+  if (typeof candidate.selectedCourseId !== 'string')
+    return { selectedCourseId: null, mode: 'none' };
+  if (candidate.mode === 'browse')
     return {
-      selectedCourseId: value.selectedCourseId,
+      selectedCourseId: candidate.selectedCourseId,
       mode: 'browse',
-      expired: true,
+      expired: candidate.expired === true,
     };
+
+  let session: OrderingSession | null = null;
+  if (
+    candidate.mode === 'ordering_session' &&
+    validSession(candidate.orderingSession)
+  ) {
+    session = candidate.orderingSession;
+  } else if (candidate.mode === 'active_round') {
+    const legacy = candidate.activeRound as Record<string, unknown> | undefined;
+    const legacyMethod =
+      legacy?.verificationMethod === 'demo_qr'
+        ? 'course_qr'
+        : legacy?.verificationMethod === 'demo_course_code'
+          ? 'course_code'
+          : legacy?.verificationMethod === 'simulated_location'
+            ? 'simulated_location'
+            : null;
+    if (
+      legacyMethod &&
+      legacy?.courseId === candidate.selectedCourseId &&
+      typeof legacy.verifiedAt === 'string' &&
+      Number.isFinite(Date.parse(legacy.verifiedAt)) &&
+      typeof legacy.expiresAt === 'string' &&
+      Number.isFinite(Date.parse(legacy.expiresAt))
+    ) {
+      session = {
+        version: 1,
+        id: `migrated-${candidate.selectedCourseId}-${Date.parse(legacy.verifiedAt)}`,
+        courseId: candidate.selectedCourseId,
+        verificationMethod: legacyMethod,
+        verifiedAt: legacy.verifiedAt,
+        expiresAt: legacy.expiresAt,
+        status: 'active',
+        confidence: legacyMethod === 'simulated_location' ? 'demo' : 'fallback',
+      };
+    }
   }
-  return value;
+  if (!session || session.courseId !== candidate.selectedCourseId)
+    return { selectedCourseId: candidate.selectedCourseId, mode: 'browse' };
+  if (session.status !== 'active' || Date.parse(session.expiresAt) <= now)
+    return {
+      selectedCourseId: candidate.selectedCourseId,
+      mode: 'browse',
+      expired: session.status !== 'revoked',
+    };
+  return {
+    selectedCourseId: candidate.selectedCourseId,
+    mode: 'ordering_session',
+    orderingSession: session,
+  };
+}
+
+export function readStoredCourseContext(storage: Pick<Storage, 'getItem'>) {
+  try {
+    const raw = storage.getItem(COURSE_CONTEXT_STORAGE_KEY);
+    return normalizeCourseContext(raw ? JSON.parse(raw) : null);
+  } catch {
+    return { selectedCourseId: null, mode: 'none' } as CourseContext;
+  }
 }
 
 type CourseContextApi = {
@@ -38,107 +123,102 @@ type CourseContextApi = {
   announcement: string;
   selectCourse: (courseId: string) => void;
   verify: (method: VerificationMethod, now?: Date) => void;
-  endRound: () => void;
+  endOrderingSession: () => void;
   clearCourse: () => void;
 };
 const Context = createContext<CourseContextApi | null>(null);
 
-function readContext(): CourseContext {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { selectedCourseId: null, mode: 'none' };
-    const value: unknown = JSON.parse(raw);
-    if (!value || typeof value !== 'object' || !('mode' in value))
-      return { selectedCourseId: null, mode: 'none' };
-    const candidate = value as Partial<CourseContext>;
-    if (candidate.mode === 'none')
-      return { selectedCourseId: null, mode: 'none' };
-    if (
-      typeof candidate.selectedCourseId !== 'string' ||
-      (candidate.mode !== 'browse' && candidate.mode !== 'active_round')
-    )
-      return { selectedCourseId: null, mode: 'none' };
-    if (candidate.mode === 'active_round' && !('activeRound' in candidate))
-      return { selectedCourseId: candidate.selectedCourseId, mode: 'browse' };
-    return normalizeCourseContext(candidate as CourseContext);
-  } catch {
-    return { selectedCourseId: null, mode: 'none' };
-  }
-}
-
 export function CourseContextProvider({ children }: { children: ReactNode }) {
-  const [context, setContext] = useState<CourseContext>(readContext);
-  const [announcement, setAnnouncement] = useState('No course selected.');
-  useEffect(
-    () => localStorage.setItem(STORAGE_KEY, JSON.stringify(context)),
-    [context],
+  const [context, setContext] = useState<CourseContext>(() =>
+    readStoredCourseContext(localStorage),
   );
+  const [announcement, setAnnouncement] = useState('No course selected.');
   useEffect(() => {
-    if (context.mode !== 'active_round') return;
-    const remaining = Date.parse(context.activeRound.expiresAt) - Date.now();
-    if (remaining <= 0) {
-      setContext(normalizeCourseContext(context));
-      setAnnouncement(
-        'Your demo Active Round expired. Browse-only mode is active.',
-      );
-      return;
+    try {
+      localStorage.setItem(COURSE_CONTEXT_STORAGE_KEY, JSON.stringify(context));
+    } catch {
+      // Storage may be unavailable; browsing remains functional.
     }
-    const timer = window.setTimeout(() => {
+  }, [context]);
+  useEffect(() => {
+    if (context.mode !== 'ordering_session') return;
+    const remaining =
+      Date.parse(context.orderingSession.expiresAt) - Date.now();
+    const expire = () => {
       setContext(normalizeCourseContext(context));
       setAnnouncement(
-        'Your demo Active Round expired. Browse-only mode is active.',
+        'Your Ordering Session expired. Verify again to add items or place an order.',
       );
-    }, remaining);
+    };
+    if (remaining <= 0) return expire();
+    const timer = window.setTimeout(expire, remaining);
     return () => window.clearTimeout(timer);
   }, [context]);
   const selectCourse = useCallback((courseId: string) => {
     setContext({ selectedCourseId: courseId, mode: 'browse' });
-    setAnnouncement('Course changed. Browse-only mode is active.');
+    setAnnouncement('Course changed. Browse menu is active.');
   }, []);
   const verify = useCallback((method: VerificationMethod, now = new Date()) => {
     setContext((current) => {
       if (!current.selectedCourseId) return current;
-      const round: ActiveRound = {
+      const session: OrderingSession = {
+        version: 1,
+        id: `session-${current.selectedCourseId}-${now.getTime()}`,
         courseId: current.selectedCourseId,
         verificationMethod: method,
         verifiedAt: now.toISOString(),
         expiresAt: new Date(
-          now.getTime() + ACTIVE_ROUND_MINUTES * 60_000,
+          now.getTime() + ORDERING_SESSION_MINUTES * 60_000,
         ).toISOString(),
+        status: 'active',
+        confidence:
+          method === 'simulated_location'
+            ? 'demo'
+            : method === 'geolocation'
+              ? 'high'
+              : 'fallback',
       };
       return {
-        selectedCourseId: round.courseId,
-        mode: 'active_round',
-        activeRound: round,
+        selectedCourseId: session.courseId,
+        mode: 'ordering_session',
+        orderingSession: session,
       };
     });
-    setAnnouncement('Demo verification complete. Active Round started.');
+    setAnnouncement('Ordering unlocked.');
   }, []);
-  const endRound = useCallback(() => {
+  const endOrderingSession = useCallback(() => {
     setContext((current) =>
       current.selectedCourseId
         ? { selectedCourseId: current.selectedCourseId, mode: 'browse' }
         : current,
     );
-    setAnnouncement('Active Round ended. Browse-only mode is active.');
+    setAnnouncement('Ordering Session ended. Browse menu is active.');
   }, []);
   const clearCourse = useCallback(() => {
     setContext({ selectedCourseId: null, mode: 'none' });
     setAnnouncement('Course cleared. Choose a course to browse products.');
   }, []);
-  const api = useMemo<CourseContextApi>(
+  const api = useMemo(
     () => ({
       context,
       announcement,
       selectCourse,
       verify,
-      endRound,
+      endOrderingSession,
       clearCourse,
     }),
-    [announcement, clearCourse, context, endRound, selectCourse, verify],
+    [
+      announcement,
+      clearCourse,
+      context,
+      endOrderingSession,
+      selectCourse,
+      verify,
+    ],
   );
   return <Context.Provider value={api}>{children}</Context.Provider>;
 }
+
 export function useCourseContext() {
   const value = useContext(Context);
   if (!value)

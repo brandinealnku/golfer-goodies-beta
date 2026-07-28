@@ -12,6 +12,11 @@ import type {
 } from '../../types/marketplace';
 import { formatUsd, labelize } from '../../utils/format';
 import { ModalOverlay } from '../../components/ModalOverlay';
+import {
+  validatePendingOrderingIntent,
+  type PendingOrderingIntent,
+} from '../../state/pending-ordering-intent';
+import { createDemoVerifier } from '../../services/course-eligibility';
 
 export function getCourseRestriction(course: Course, expired: boolean) {
   if (course.availability === 'closed')
@@ -101,7 +106,8 @@ export function CoursePage() {
     null,
   );
   const [verifyOpen, setVerifyOpen] = useState(false);
-  const [intentProductId, setIntentProductId] = useState<string | null>(null);
+  const [pendingIntent, setPendingIntent] =
+    useState<PendingOrderingIntent | null>(null);
   const [changePending, setChangePending] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<
     ProductCategory | 'all'
@@ -136,7 +142,7 @@ export function CoursePage() {
   ]);
   useEffect(() => {
     setSelectedProductId(null);
-    setIntentProductId(null);
+    setPendingIntent(null);
     setVerifyOpen(false);
     setSelectedCategory('all');
   }, [courseId]);
@@ -163,8 +169,8 @@ export function CoursePage() {
       </div>
     );
   const active =
-    context.mode === 'active_round' &&
-    context.activeRound.courseId === course.id;
+    context.mode === 'ordering_session' &&
+    context.orderingSession.courseId === course.id;
   const blocked = course.availability === 'closed' || course.orderingPaused;
   const categories = [...new Set(products.map((product) => product.category))];
   const categoryIsAvailable =
@@ -181,12 +187,12 @@ export function CoursePage() {
   );
   const returnFocus = selectedProductId
     ? productButtons.current.get(selectedProductId)
-    : intentProductId
-      ? productButtons.current.get(intentProductId)
+    : pendingIntent
+      ? productButtons.current.get(pendingIntent.productId)
       : null;
   const openProduct = (productId: string) => setSelectedProductId(productId);
-  const requireRound = (productId?: string) => {
-    setIntentProductId(productId ?? null);
+  const requireVerification = (intent: PendingOrderingIntent) => {
+    setPendingIntent(intent);
     setSelectedProductId(null);
     setVerifyOpen(true);
   };
@@ -220,24 +226,15 @@ export function CoursePage() {
         <div>
           <strong>
             {active
-              ? `Active at ${course.name}`
+              ? `Ordering unlocked at ${course.name}`
               : `You’re browsing ${course.name}`}
           </strong>
           <span>
             {active
-              ? 'Ordering unlocked for this round.'
-              : 'Start your round to unlock ordering.'}
+              ? `Ordering Session expires at ${new Date(context.mode === 'ordering_session' ? context.orderingSession.expiresAt : 0).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`
+              : 'Browse the menu. Verify when you’re ready to add an item.'}
           </span>
         </div>
-        {!active && !blocked && (
-          <button
-            type="button"
-            className="button"
-            onClick={() => requireRound()}
-          >
-            Start round
-          </button>
-        )}
         <Link className="button secondary" to="/discover">
           Change course
         </Link>
@@ -357,7 +354,16 @@ export function CoursePage() {
             active={active && !blocked}
             returnFocus={returnFocus}
             onClose={() => setSelectedProductId(null)}
-            onRequireRound={() => requireRound(selectedProduct.id)}
+            onRequireVerification={(q, m, i) =>
+              requireVerification({
+                courseId: course.id,
+                productId: selectedProduct.id,
+                quantity: q,
+                modifierOptionIds: m.map((option) => option.id),
+                specialInstructions: i,
+                originatingAction: 'add',
+              })
+            }
             onAdd={(q, m, i) => {
               cart.add(course.id, selectedProduct, q, m, i);
               setSelectedProductId(null);
@@ -368,7 +374,7 @@ export function CoursePage() {
       {verifyOpen && (
         <OverlayErrorBoundary
           key={`verification-${course.id}`}
-          label="round verification"
+          label="course verification"
           onRetry={() => setVerifyOpen(true)}
         >
           <RoundVerificationSheet
@@ -376,13 +382,31 @@ export function CoursePage() {
             returnFocus={returnFocus}
             onClose={() => {
               setVerifyOpen(false);
-              setIntentProductId(null);
+              setPendingIntent(null);
             }}
             onVerified={(method) => {
+              const validated = pendingIntent
+                ? validatePendingOrderingIntent(
+                    pendingIntent,
+                    course.id,
+                    products,
+                  )
+                : null;
+              if (!validated) {
+                setVerifyOpen(false);
+                setPendingIntent(null);
+                return;
+              }
               verify(method);
+              cart.add(
+                course.id,
+                validated.product,
+                pendingIntent!.quantity,
+                validated.modifiers,
+                pendingIntent!.specialInstructions,
+              );
               setVerifyOpen(false);
-              if (intentProductId) setSelectedProductId(intentProductId);
-              setIntentProductId(null);
+              setPendingIntent(null);
             }}
           />
         </OverlayErrorBoundary>
@@ -418,14 +442,18 @@ function ProductDetailSheet({
   product,
   active,
   onClose,
-  onRequireRound,
+  onRequireVerification,
   onAdd,
   returnFocus,
 }: {
   product: Product;
   active: boolean;
   onClose: () => void;
-  onRequireRound: () => void;
+  onRequireVerification: (
+    q: number,
+    m: ProductModifierOption[],
+    i: string,
+  ) => void;
   onAdd: (q: number, m: ProductModifierOption[], i: string) => void;
   returnFocus?: HTMLElement | null;
 }) {
@@ -438,7 +466,6 @@ function ProductDetailSheet({
     quantity;
   const incompleteRequiredGroup = product.modifiers?.find(
     (group) =>
-      active &&
       group.required &&
       !group.options.some((option) =>
         selected.some((selection) => selection.id === option.id),
@@ -458,7 +485,8 @@ function ProductDetailSheet({
       firstIncompleteRef.current?.focus();
       return;
     }
-    onAdd(quantity, selected, instructions);
+    if (active) onAdd(quantity, selected, instructions);
+    else onRequireVerification(quantity, selected, instructions);
   };
   return (
     <ModalOverlay
@@ -500,7 +528,6 @@ function ProductDetailSheet({
         )}
         {product.modifiers?.map((g) => {
           const missing =
-            active &&
             g.required &&
             !g.options.some((option) =>
               selected.some((selection) => selection.id === option.id),
@@ -583,8 +610,8 @@ function ProductDetailSheet({
             Add · {formatUsd(total)}
           </button>
         ) : (
-          <button type="button" className="button" onClick={onRequireRound}>
-            Start round to order
+          <button type="button" className="button" onClick={attemptAdd}>
+            Verify you’re at this course
           </button>
         )}
       </div>
@@ -602,25 +629,32 @@ function RoundVerificationSheet({
   onVerified: (m: VerificationMethod) => void;
   returnFocus?: HTMLElement | null;
 }) {
-  const [method, setMethod] =
-    useState<VerificationMethod>('simulated_location');
+  const [method, setMethod] = useState<VerificationMethod | null>(null);
   const [entry, setEntry] = useState('');
   const [error, setError] = useState('');
-  const submit = () => {
+  const submit = async () => {
+    if (!method) return;
     if (method === 'simulated_location') {
-      if (course.demoLocationResult === 'eligible') onVerified(method);
+      const result = await createDemoVerifier(course).verifyLocation({
+        courseId: course.id,
+      });
+      if (result.status === 'eligible') onVerified(method);
+      else if (result.status === 'uncertain')
+        setError(
+          'Your location may overlap the course boundary. Try location again, scan the course QR, or enter the course code.',
+        );
       else
         setError(
-          'This simulated location cannot verify the round. Choose a QR or course code instead.',
+          'Ordering cannot be unlocked with this location. Scan the course QR or enter the course code instead.',
         );
       return;
     }
     const expected =
-      method === 'demo_qr' ? course.demoQrToken : course.demoCode;
+      method === 'course_qr' ? course.demoQrToken : course.demoCode;
     if (entry.trim().toUpperCase() === expected) onVerified(method);
     else
       setError(
-        `That demo ${method === 'demo_qr' ? 'QR token' : 'course code'} does not match. Try again.`,
+        `That demo ${method === 'course_qr' ? 'QR token' : 'course code'} does not match. Try again.`,
       );
   };
   return (
@@ -635,14 +669,14 @@ function RoundVerificationSheet({
         type="button"
         className="sheet-close"
         onClick={onClose}
-        aria-label="Close round verification"
+        aria-label="Close course verification"
       >
         ×
       </button>
-      <h2 id="verify-title">Start your round</h2>
+      <h2 id="verify-title">Confirm you’re at {course.name}</h2>
       <p>
-        Choose one demonstration method. No continuous location tracking is
-        used.
+        Ordering is available to guests currently at this course. Choose a
+        verification method to unlock ordering.
       </p>
       <div
         className="method-tabs"
@@ -657,39 +691,45 @@ function RoundVerificationSheet({
             setError('');
           }}
         >
-          Current location
+          Use my location
         </button>
         <button
           type="button"
-          aria-pressed={method === 'demo_qr'}
+          aria-pressed={method === 'course_qr'}
           onClick={() => {
-            setMethod('demo_qr');
+            setMethod('course_qr');
             setError('');
           }}
         >
-          Demo QR
+          Scan course QR
         </button>
         <button
           type="button"
-          aria-pressed={method === 'demo_course_code'}
+          aria-pressed={method === 'course_code'}
           onClick={() => {
-            setMethod('demo_course_code');
+            setMethod('course_code');
             setError('');
           }}
         >
-          Course code
+          Enter course code
         </button>
       </div>
-      {method === 'simulated_location' ? (
+      {method === null ? (
+        <p className="location-privacy">
+          Location is requested only after you choose Use my location. Precise
+          location is used only for this eligibility check and is not saved in
+          your browser.
+        </p>
+      ) : method === 'simulated_location' ? (
         <div className="alert">
           <p>
-            Demo mode simulates a one-time location check; it never contacts
-            geolocation.
+            Demo mode simulates a one-time location check after this explicit
+            action. It does not request browser location.
           </p>
           {course.demoLocationResult !== 'eligible' && (
             <div className="verification-recovery" role="status">
-              <strong>This demo course requires a non-location method.</strong>
-              <p>Choose Demo QR or Course code above to continue.</p>
+              <strong>A fallback method may be needed at this course.</strong>
+              <p>Choose Scan course QR or Enter course code to continue.</p>
               <dl>
                 <dt>Fictional QR token</dt>
                 <dd>
@@ -705,27 +745,31 @@ function RoundVerificationSheet({
         </div>
       ) : (
         <label className="field" htmlFor="verification-entry">
-          {method === 'demo_qr' ? 'Demo QR token' : 'Demo course code'}
+          {method === 'course_qr' ? 'Demo QR token' : 'Demo course code'}
           <input
             id="verification-entry"
             aria-label={
-              method === 'demo_qr' ? 'Demo QR token' : 'Demo course code'
+              method === 'course_qr' ? 'Demo QR token' : 'Demo course code'
             }
             value={entry}
             onChange={(e) => setEntry(e.target.value)}
             aria-invalid={Boolean(error)}
           />
           <small>
-            Try: {method === 'demo_qr' ? course.demoQrToken : course.demoCode}
+            Try: {method === 'course_qr' ? course.demoQrToken : course.demoCode}
           </small>
         </label>
       )}
       <p className="error-message" role="status">
         {error}
       </p>
-      <button type="button" className="button" onClick={submit}>
-        Verify and start round
-      </button>
+      {method && (
+        <button type="button" className="button" onClick={submit}>
+          {method === 'simulated_location'
+            ? 'Check location'
+            : 'Unlock ordering'}
+        </button>
+      )}
     </ModalOverlay>
   );
 }

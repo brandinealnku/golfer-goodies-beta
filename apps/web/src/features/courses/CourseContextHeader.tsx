@@ -6,7 +6,8 @@ import type { Course } from '../../types/marketplace';
 import { useEffect, useState } from 'react';
 
 export function CourseContextHeader() {
-  const { context, announcement, endRound, clearCourse } = useCourseContext();
+  const { context, announcement, endOrderingSession, clearCourse } =
+    useCourseContext();
   const [course, setCourse] = useState<Course | null>(null);
   useEffect(() => {
     let current = true;
@@ -31,16 +32,18 @@ export function CourseContextHeader() {
         <aside className="course-context" aria-label="Course context">
           <div>
             <strong>
-              {context.mode === 'active_round' ? 'Active Round' : 'Browsing'} ·{' '}
-              {selectedCourse.name}
+              {context.mode === 'ordering_session'
+                ? 'Ordering Session'
+                : 'Browsing'}{' '}
+              · {selectedCourse.name}
             </strong>
             <span>
               <span className={`status status-${selectedCourse.availability}`}>
                 {selectedCourse.availability}
               </span>{' '}
-              {context.mode === 'active_round'
-                ? 'Order-ready demo'
-                : 'Browse only'}
+              {context.mode === 'ordering_session'
+                ? 'Ordering unlocked'
+                : 'Browse menu'}
             </span>
           </div>
           <div className="context-actions">
@@ -51,8 +54,8 @@ export function CourseContextHeader() {
             >
               Change course
             </Link>
-            {context.mode === 'active_round' && (
-              <Button onClick={endRound}>End round</Button>
+            {context.mode === 'ordering_session' && (
+              <Button onClick={endOrderingSession}>End ordering session</Button>
             )}
           </div>
         </aside>
