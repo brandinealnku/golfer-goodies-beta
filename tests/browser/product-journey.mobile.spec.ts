@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => localStorage.clear());
 });
 
-test("Summit Pines pointer journey opens the portal and reaches the cart", async ({
+test("mobile 375x812: Summit Pines pointer journey uses the floating cart", async ({
   page,
 }) => {
   await page.goto("/#/course/summit-pines");
@@ -28,19 +28,29 @@ test("Summit Pines pointer journey opens the portal and reaches the cart", async
   await productSheet.getByRole("radio", { name: "Kettle chips" }).check();
   await productSheet.getByRole("button", { name: /Add ·/ }).click();
 
-  await expect(page.getByLabel("Cart, 1 items").first()).toBeVisible();
+  await expect(
+    page.locator(".mobile-app-bar").getByLabel("Cart, 1 items"),
+  ).toBeVisible();
   const floatingCart = page.locator(".floating-cart");
   await expect(floatingCart).toBeVisible();
+  await expect(floatingCart).toContainText("1 item");
+  await expect(floatingCart).toContainText("$10.95");
   await floatingCart.click();
-  await expect(
-    page.getByRole("heading", { name: "Fairway Club" }),
-  ).toBeVisible();
+
   await expect(
     page.getByRole("heading", { name: /Summit Pines Resort/ }),
   ).toBeVisible();
+  const item = page.locator(".cart-item");
+  await expect(item).toContainText("Fairway Club");
+  await expect(item).toContainText("$10.95");
+  await expect(item.locator("output")).toHaveText("1");
+  await expect(page.getByText("Subtotal").locator("..")).toContainText(
+    "$10.95",
+  );
+  await expect(page.getByText("Cedar Bend Municipal")).toHaveCount(0);
 });
 
-test("Cedar Bend course-code journey restores the product and updates its cart", async ({
+test("mobile 375x812: Cedar Bend course-code journey uses the floating cart", async ({
   page,
 }) => {
   await page.goto("/#/course/cedar-bend-muni");
@@ -54,7 +64,6 @@ test("Cedar Bend course-code journey restores the product and updates its cart",
   await productSheet
     .getByRole("button", { name: "Start round to order" })
     .click();
-
   const verificationSheet = page.locator("[data-verification-sheet]");
   await expect(verificationSheet).toBeVisible();
   await verificationSheet.getByRole("button", { name: "Course code" }).click();
@@ -65,12 +74,22 @@ test("Cedar Bend course-code journey restores the product and updates its cart",
 
   await expect(productSheet).toBeVisible();
   await productSheet.getByRole("button", { name: /Add ·/ }).click();
-  await expect(page.getByLabel("Cart, 1 items").first()).toBeVisible();
-  await page.locator(".floating-cart").click();
   await expect(
-    page.getByRole("heading", { name: "Citrus Sparkler" }),
+    page.locator(".mobile-app-bar").getByLabel("Cart, 1 items"),
   ).toBeVisible();
+  const floatingCart = page.locator(".floating-cart");
+  await expect(floatingCart).toBeVisible();
+  await expect(floatingCart).toContainText("1 item");
+  await expect(floatingCart).toContainText("$4.95");
+  await floatingCart.click();
+
   await expect(
     page.getByRole("heading", { name: /Cedar Bend Municipal/ }),
   ).toBeVisible();
+  const item = page.locator(".cart-item");
+  await expect(item).toContainText("Citrus Sparkler");
+  await expect(item).toContainText("$4.95");
+  await expect(item.locator("output")).toHaveText("1");
+  await expect(page.getByText("Subtotal").locator("..")).toContainText("$4.95");
+  await expect(page.getByText("Summit Pines Resort")).toHaveCount(0);
 });
