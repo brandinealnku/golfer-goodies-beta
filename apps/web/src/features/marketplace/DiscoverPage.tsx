@@ -116,17 +116,26 @@ export function DiscoverPage() {
   };
   return (
     <div className="page discovery-page">
-      <PageHeader title="Where are you playing today?">
-        <Badge>
-          {environment.mode === 'demo'
-            ? 'Fictional demonstration'
-            : `${environment.mode} discovery`}
-        </Badge>
-      </PageHeader>
-      <p>
-        Choose an order-enabled course before viewing products. Discovering a
-        course does not authorize ordering.
-      </p>
+      <section className="discovery-hero">
+        <PageHeader title="Everything you need, without leaving the course.">
+          <Badge>
+            {environment.mode === 'demo'
+              ? 'Fictional demonstration'
+              : `${environment.mode} discovery`}
+          </Badge>
+        </PageHeader>
+        <p>
+          Find your course, start your round, and order food, drinks, and golf
+          essentials.
+        </p>
+        <button
+          className="button hero-action"
+          onClick={near}
+          disabled={loading}
+        >
+          Find nearby courses
+        </button>
+      </section>
       <section className="location-panel" aria-labelledby="nearby-heading">
         <h2 id="nearby-heading">Courses near you</h2>
         <p>
@@ -198,6 +207,24 @@ export function DiscoverPage() {
           Google
         </p>
       )}
+      <section className="how-it-works" aria-labelledby="how-heading">
+        <span className="eyebrow">Your on-course concierge</span>
+        <h2 id="how-heading">How it works</h2>
+        <ol>
+          <li>
+            <strong>Find your course</strong>
+            <span>Search manually or choose a one-time nearby lookup.</span>
+          </li>
+          <li>
+            <strong>Start your round</strong>
+            <span>Use a safe demo verification method.</span>
+          </li>
+          <li>
+            <strong>Order and keep playing</strong>
+            <span>Track a local demonstration order.</span>
+          </li>
+        </ol>
+      </section>
     </div>
   );
 }
@@ -220,6 +247,12 @@ function Results({
             orderingAvailable,
           }) => (
             <Card key={`${c.provider}:${c.providerPlaceId}`}>
+              <img
+                className="course-card-image"
+                src={`images/demo/courses/${m?.id ?? 'cedar-bend'}.svg`}
+                alt=""
+                loading="lazy"
+              />
               <p
                 className={`availability ${orderingAvailable ? 'available' : 'unavailable'}`}
               >

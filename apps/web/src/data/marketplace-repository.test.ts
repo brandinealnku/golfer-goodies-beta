@@ -5,7 +5,7 @@ it('loads fictional demo records', async () => {
     c = await r.getCourses();
   expect(c).toHaveLength(5);
   expect(new Set(c.map((x) => x.archetype)).size).toBe(5);
-  expect(await r.getProductsForCourse(c[0].id)).toHaveLength(2);
+  expect(await r.getProductsForCourse(c[0].id)).toHaveLength(6);
 });
 it('requires a course id and never crosses course boundaries', async () => {
   const r = new DemoMarketplaceRepository();

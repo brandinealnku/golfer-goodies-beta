@@ -18,6 +18,7 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 18,
     verified: true,
     description: 'A fictional mountain resort marketplace.',
+    image: 'images/demo/courses/summit-pines.svg', imageAlt: 'Illustrated mountain fairway at Summit Pines',
     demoCode: 'BIRDIE7',
     demoQrToken: 'SUMMIT-DEMO-QR',
     minimumOrderCents: 1200,
@@ -35,6 +36,7 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 15,
     verified: true,
     description: 'A welcoming fictional public course.',
+    image: 'images/demo/courses/meadow-loop.svg', imageAlt: 'Illustrated rolling fairway at Meadow Loop',
     demoCode: 'TURN9',
     demoQrToken: 'MEADOW-DEMO-QR',
     minimumOrderCents: 1000,
@@ -51,6 +53,7 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 12,
     verified: true,
     description: 'A fictional technology-forward urban venue.',
+    image: 'images/demo/courses/circuit-links.svg', imageAlt: 'Illustrated city course at Circuit Links',
     demoCode: 'EAGLE18',
     demoQrToken: 'CIRCUIT-DEMO-QR',
     minimumOrderCents: 1500,
@@ -68,6 +71,7 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 25,
     verified: false,
     description: 'A fictional traditional private club.',
+    image: 'images/demo/courses/heritage-oaks.svg', imageAlt: 'Illustrated oak-lined fairway at Heritage Oaks',
     demoCode: 'OAKS5',
     demoQrToken: 'OAKS-DEMO-QR',
     minimumOrderCents: 1000,
@@ -84,34 +88,34 @@ export const demoCourses: Course[] = [
     estimatedMinutes: 10,
     verified: false,
     description: 'An affordable fictional municipal course.',
+    image: 'images/demo/courses/cedar-bend.svg', imageAlt: 'Illustrated sunny municipal golf course at Cedar Bend',
     demoCode: 'CEDAR3',
     demoQrToken: 'CEDAR-DEMO-QR',
     minimumOrderCents: 800,
     demoLocationResult: 'outside_service_area',
   },
 ];
-export const demoProducts: Product[] = demoCourses.flatMap((c, i) => [
-  {
-    id: `${c.id}-snack`,
-    courseId: c.id,
-    name: i % 2 ? 'Trail Mix Cup' : 'Clubhouse Sandwich',
-    category: 'food',
-    priceCents: 650 + i * 75,
-    available: true,
-    preparationMinutes: 8 + i,
-    publiclyVisible: true,
-  },
-  {
-    id: `${c.id}-drink`,
-    courseId: c.id,
-    name: 'Citrus Sparkler',
-    category: 'drink',
-    priceCents: 350,
-    available: i !== 3,
-    preparationMinutes: 4,
-    publiclyVisible: true,
-  },
-]);
+const menu = [
+  ['club-sandwich','Fairway Club','food',1095,'Turkey, crisp greens, tomato, and herb spread.'],
+  ['sparkler','Citrus Sparkler','drink',395,'Bright citrus, sparkling water, and plenty of ice.'],
+  ['trail-mix','Back Nine Trail Mix','essentials',525,'A satisfying sweet-and-salty snack cup.'],
+  ['golf-balls','Three-Ball Rescue Pack','gear',1295,'Three soft-feel golf balls for the unexpected water hole.'],
+  ['rain-kit','Quick-Dry Rain Kit','gear',1895,'Compact poncho and towel for a passing shower.'],
+  ['putting','Ten-Minute Putting Tune-up','service',1500,'A fictional pre-round practice green experience.'],
+] as const;
+export const demoProducts: Product[] = demoCourses.flatMap((course, courseIndex) =>
+  menu.map(([slug,name,category,priceCents,description], index) => ({
+    id: `${course.id}-${slug}`, courseId: course.id, name, category,
+    priceCents: priceCents + courseIndex * 25, available: !(courseIndex === 3 && index === 1),
+    preparationMinutes: index < 3 ? 6 + index * 2 : 4, publiclyVisible: true,
+    image: `images/demo/products/${slug}.svg`, imageAlt: `${name}, demonstration item`, description,
+    tags: index === 1 ? ['Cold','Alcohol-free'] : index === 0 ? ['Freshly made'] : ['Course essential'],
+    featured: index < 2, popular: index === 0 || index === 3,
+    modifiers: index === 0 ? [{ id: 'side', name: 'Choose a side', required: true, options: [
+      {id:'chips',name:'Kettle chips',priceCents:0},{id:'fruit',name:'Fresh fruit',priceCents:150},
+    ]}] : undefined,
+  })),
+);
 
 const courseIds = new Set(demoCourses.map((course) => course.id));
 for (const product of demoProducts) {

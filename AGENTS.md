@@ -55,3 +55,16 @@
 - Never treat discovery location as ordering eligibility.
 - Always preserve manual search.
 - Always display required provider attribution.
+
+## Permanent product-experience rules
+
+- Never promote placeholder routes in primary navigation.
+- Never carry cart contents across courses.
+- Never collect real payment data in demo mode.
+- Never use floating-point values for currency.
+- Never hide ordering eligibility behind color alone.
+- Never dominate consumer screens with developer disclaimers.
+- Always preserve manual course search.
+- Always keep exact coordinates out of persistent storage.
+- Always test the complete primary journey at mobile width.
+- Always provide a visible startup error fallback.
