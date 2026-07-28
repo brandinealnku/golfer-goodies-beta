@@ -1,5 +1,11 @@
 # Golfer Goodies v0.2
 
+## v0.4 Phase 2 account and management slice
+
+The React beta includes an explicit identity boundary, deterministic browser-local demo employees, Firebase Auth emulator sign-in, per-course memberships and capabilities, unverified course-access requests, and a first employee workspace for operations and catalog availability. Authorized published changes flow through the course-scoped marketplace repository to the golfer storefront. Demo changes stay in one browser and can be reset; emulator changes use local Firestore and trusted callable functions; connected accounts remain honestly unavailable until production onboarding is configured.
+
+See [identity and management architecture](docs/architecture/IDENTITY_MEMBERSHIPS_AND_COURSE_MANAGEMENT.md), [employee QA](docs/testing/EMPLOYEE_STOREFRONT_QA.md), and [local test users](docs/development/LOCAL_TEST_USERS.md). This phase does **not** provide real employee verification, claim approval, production registration, uploads, payments, or live fulfillment. Existing carts retain captured prices when a catalog price changes; only newly added products use the new price.
+
 Golfer Goodies is a fictional marketplace demonstration. The v0.1 beta is retained at the repository root and in `legacy/v0.1/`, but it is no longer deployed to GitHub Pages. Phase 3 adds a **local-only Firebase Emulator Suite foundation** to the React/Vite app in `apps/web`; no production Firebase project, deployment, real authentication workflow, real customer/course data, orders, Stripe, or payment processing exists.
 
 ## Course-first marketplace (Phase 2.5)

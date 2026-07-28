@@ -1,6 +1,7 @@
 import { environment } from '../config/environment';
 import type { Course, Product } from '../types/marketplace';
-import { demoCourses, demoProducts } from './demo-data';
+import { demoCourses } from './demo-data';
+import { demoCourse, demoCourseProducts } from '../management/demo-management';
 export interface MarketplaceRepository {
   getCourses(): Promise<Course[]>;
   getCourse(id: string): Promise<Course | null>;
@@ -11,14 +12,12 @@ export class DemoMarketplaceRepository implements MarketplaceRepository {
     return structuredClone(demoCourses);
   }
   async getCourse(id: string) {
-    return structuredClone(demoCourses.find((c) => c.id === id) ?? null);
+    return structuredClone(demoCourse(id));
   }
   async getProductsForCourse(courseId: string) {
     if (!courseId) throw new Error('A course ID is required to load products.');
     if (!demoCourses.some((course) => course.id === courseId)) return [];
-    const products = demoProducts.filter(
-      (p) => p.courseId === courseId && p.publiclyVisible,
-    );
+    const products = demoCourseProducts(courseId);
     if (products.some((product) => product.courseId !== courseId))
       throw new Error('Invalid product-course relationship.');
     return structuredClone(products);

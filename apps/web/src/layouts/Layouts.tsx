@@ -4,11 +4,14 @@ import { useCourseContext } from '../state/course-context';
 import { useCart } from '../state/cart';
 import { demoCourses } from '../data/demo-data';
 import { formatUsd } from '../utils/format';
+import { useIdentity } from '../auth/IdentityContext';
+import { hasCapability } from '../auth/authorization';
 
 const Icon = ({ children }: { children: string }) => (
   <span aria-hidden="true">{children}</span>
 );
 export function DesktopAppBar() {
+  const { state, memberships } = useIdentity();
   const { context } = useCourseContext();
   const { itemCount } = useCart();
   const course = context.selectedCourseId
@@ -24,7 +27,14 @@ export function DesktopAppBar() {
           {course ? 'Course' : 'Discover'}
         </NavLink>
         <NavLink to="/orders">Orders</NavLink>
-        <NavLink to="/account">Account</NavLink>
+        {memberships.some((m) =>
+          hasCapability(m, 'view_management_workspace'),
+        ) && <NavLink to="/manage">Manage</NavLink>}
+        <NavLink to="/account">
+          {state.status === 'signed_in'
+            ? state.user.displayName.split(' ')[0]
+            : 'Account'}
+        </NavLink>
       </nav>
       <NavLink
         className="cart-button"
@@ -67,6 +77,7 @@ export function MobileAppBar() {
   );
 }
 export function MobileBottomNav() {
+  const { memberships } = useIdentity();
   const { context } = useCourseContext();
   return (
     <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
@@ -89,6 +100,13 @@ export function MobileBottomNav() {
       <NavLink to="/account">
         <Icon>●</Icon>Account
       </NavLink>
+      {memberships.some((m) =>
+        hasCapability(m, 'view_management_workspace'),
+      ) && (
+        <NavLink to="/manage">
+          <Icon>⚙</Icon>Manage
+        </NavLink>
+      )}
     </nav>
   );
 }

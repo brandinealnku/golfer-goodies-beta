@@ -4,6 +4,7 @@ import { CourseContextProvider } from '../state/course-context';
 import { CartProvider } from '../state/cart';
 import { DemoOrderProvider } from '../state/demo-orders';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { IdentityProvider } from '../auth/IdentityContext';
 class AppErrorBoundary extends Component<
   { children: ReactNode },
   { error?: Error }
@@ -47,13 +48,15 @@ export function App() {
   return (
     <AppErrorBoundary>
       <HashRouter>
-        <CourseContextProvider>
-          <CartProvider>
-            <DemoOrderProvider>
-              <AppRoutes />
-            </DemoOrderProvider>
-          </CartProvider>
-        </CourseContextProvider>
+        <IdentityProvider>
+          <CourseContextProvider>
+            <CartProvider>
+              <DemoOrderProvider>
+                <AppRoutes />
+              </DemoOrderProvider>
+            </CartProvider>
+          </CourseContextProvider>
+        </IdentityProvider>
       </HashRouter>
     </AppErrorBoundary>
   );

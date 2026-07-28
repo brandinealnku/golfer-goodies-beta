@@ -24,6 +24,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm --workspace @golfer-goodies/web test",
     "test:browser": "playwright test",
+    "test:pages": "node --test apps/web/tests/course-first-contract.test.mjs",
     "test:rules": "firebase emulators:exec --only firestore,storage --project golfer-goodies-local \"npm run test:rules:run\"",
     "test:rules:run": "vitest run tests/rules",
     "test:emulators": "npm --workspace @golfer-goodies/functions run build && firebase emulators:exec --only auth,firestore,functions,storage --project golfer-goodies-local \"node scripts/seed-emulators.mjs && vitest run tests/emulators\"",

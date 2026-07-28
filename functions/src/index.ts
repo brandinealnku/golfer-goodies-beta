@@ -2,6 +2,28 @@ import { onCall } from "firebase-functions/v2/https";
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { discoverCourses } from "./discovery/handlers.js";
+import { initializeApp, getApps } from "firebase-admin/app";
+import {
+  createCourseProductHandler,
+  ensureUserProfileHandler,
+  setCourseProductAvailabilityHandler,
+  submitCourseClaimHandler,
+  updateCourseOperationsHandler,
+  updateCourseProductHandler,
+  updateFulfillmentSettingsHandler,
+} from "./management/handlers.js";
+if (!getApps().length) initializeApp();
+export const ensureUserProfile = onCall(ensureUserProfileHandler);
+export const submitCourseClaim = onCall(submitCourseClaimHandler);
+export const updateCourseOperations = onCall(updateCourseOperationsHandler);
+export const updateFulfillmentSettings = onCall(
+  updateFulfillmentSettingsHandler,
+);
+export const createCourseProduct = onCall(createCourseProductHandler);
+export const updateCourseProduct = onCall(updateCourseProductHandler);
+export const setCourseProductAvailability = onCall(
+  setCourseProductAvailabilityHandler,
+);
 import {
   createEnvironmentResponse,
   createHealthResponse,

@@ -46,6 +46,7 @@ describe("local emulator foundation", () => {
     const activeProducts = query(
       collection(db, "courses/summit-pines/products"),
       where("status", "==", "active"),
+      where("publiclyVisible", "==", true),
     );
 
     expect((await getDocs(publicCourses)).size).toBe(4);
