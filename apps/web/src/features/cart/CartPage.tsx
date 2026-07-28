@@ -114,7 +114,7 @@ export function CartPage() {
           <p className="error-message" role="alert">
             {error}
           </p>
-          <button className="button place-order" onClick={place}>
+          <button type="button" className="button place-order" onClick={place}>
             Place demo order · {formatUsd(totals.totalCents)}
           </button>
         </aside>
@@ -145,7 +145,11 @@ export function CartItemList() {
               <small key={m.id}>{m.name}</small>
             ))}
             <strong>{formatUsd(itemUnitCents(i) * i.quantity)}</strong>
-            <button className="link-button" onClick={() => remove(i.id)}>
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => remove(i.id)}
+            >
               Remove
             </button>
           </div>

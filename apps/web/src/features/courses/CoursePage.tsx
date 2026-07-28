@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getMarketplaceRepository } from '../../data/marketplace-repository';
 import { useCourseContext } from '../../state/course-context';
@@ -10,6 +10,7 @@ import type {
   VerificationMethod,
 } from '../../types/marketplace';
 import { formatUsd, labelize } from '../../utils/format';
+import { ModalOverlay } from '../../components/ModalOverlay';
 
 export function getCourseRestriction(course: Course, expired: boolean) {
   if (course.availability === 'closed')
@@ -57,6 +58,37 @@ export function QuantityStepper({
     </div>
   );
 }
+class OverlayErrorBoundary extends Component<
+  { children: ReactNode; label: string; onRetry: () => void },
+  { error: boolean }
+> {
+  state = { error: false };
+  static getDerivedStateFromError() {
+    return { error: true };
+  }
+  componentDidCatch(error: Error) {
+    if (import.meta.env.DEV) console.error('Overlay rendering failed', error);
+  }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <div className="page overlay-error" role="alert">
+        <h2>We couldn’t open {this.props.label}</h2>
+        <p>The course page is still available. Try opening it again.</p>
+        <button
+          type="button"
+          className="button"
+          onClick={() => {
+            this.setState({ error: false });
+            this.props.onRetry();
+          }}
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+}
 export function CoursePage() {
   const { courseId = '' } = useParams();
   const navigate = useNavigate();
@@ -64,10 +96,13 @@ export function CoursePage() {
   const cart = useCart();
   const [course, setCourse] = useState<Course | null>();
   const [products, setProducts] = useState<Product[]>([]);
-  const [product, setProduct] = useState<Product>();
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null,
+  );
   const [verifyOpen, setVerifyOpen] = useState(false);
-  const [intent, setIntent] = useState<Product>();
+  const [intentProductId, setIntentProductId] = useState<string | null>(null);
   const [changePending, setChangePending] = useState(false);
+  const productButtons = useRef(new Map<string, HTMLButtonElement>());
   useEffect(() => {
     let live = true;
     getMarketplaceRepository()
@@ -95,6 +130,11 @@ export function CoursePage() {
     cart.cart,
     cart.itemCount,
   ]);
+  useEffect(() => {
+    setSelectedProductId(null);
+    setIntentProductId(null);
+    setVerifyOpen(false);
+  }, [courseId]);
   if (course === undefined)
     return (
       <div className="page skeleton" role="status">
@@ -114,10 +154,18 @@ export function CoursePage() {
     context.mode === 'active_round' &&
     context.activeRound.courseId === course.id;
   const blocked = course.availability === 'closed' || course.orderingPaused;
-  const openProduct = (p: Product) => setProduct(p);
-  const requireRound = (p?: Product) => {
-    setIntent(p);
-    setProduct(undefined);
+  const selectedProduct = products.find(
+    (p) => p.id === selectedProductId && p.courseId === courseId,
+  );
+  const returnFocus = selectedProductId
+    ? productButtons.current.get(selectedProductId)
+    : intentProductId
+      ? productButtons.current.get(intentProductId)
+      : null;
+  const openProduct = (productId: string) => setSelectedProductId(productId);
+  const requireRound = (productId?: string) => {
+    setIntentProductId(productId ?? null);
+    setSelectedProductId(null);
     setVerifyOpen(true);
   };
   return (
@@ -160,7 +208,11 @@ export function CoursePage() {
           </span>
         </div>
         {!active && !blocked && (
-          <button className="button" onClick={() => requireRound()}>
+          <button
+            type="button"
+            className="button"
+            onClick={() => requireRound()}
+          >
             Start round
           </button>
         )}
@@ -204,8 +256,13 @@ export function CoursePage() {
                 .map((p) => (
                   <article className="product-card" key={p.id}>
                     <button
+                      type="button"
                       className="product-open"
-                      onClick={() => openProduct(p)}
+                      ref={(node) => {
+                        if (node) productButtons.current.set(p.id, node);
+                        else productButtons.current.delete(p.id);
+                      }}
+                      onClick={() => openProduct(p.id)}
                       aria-label={`View ${p.name} details`}
                     >
                       <img src={p.image} alt={p.imageAlt} loading="lazy" />
@@ -224,32 +281,46 @@ export function CoursePage() {
           </section>
         ))}
       </div>
-      {product && (
-        <ProductDetailSheet
-          product={product}
-          active={active && !blocked}
-          onClose={() => setProduct(undefined)}
-          onRequireRound={() => requireRound(product)}
-          onAdd={(q, m, i) => {
-            cart.add(course.id, product, q, m, i);
-            setProduct(undefined);
-          }}
-        />
+      {selectedProduct && (
+        <OverlayErrorBoundary
+          key={selectedProduct.id}
+          label="product details"
+          onRetry={() => setSelectedProductId(selectedProduct.id)}
+        >
+          <ProductDetailSheet
+            product={selectedProduct}
+            active={active && !blocked}
+            returnFocus={returnFocus}
+            onClose={() => setSelectedProductId(null)}
+            onRequireRound={() => requireRound(selectedProduct.id)}
+            onAdd={(q, m, i) => {
+              cart.add(course.id, selectedProduct, q, m, i);
+              setSelectedProductId(null);
+            }}
+          />
+        </OverlayErrorBoundary>
       )}
       {verifyOpen && (
-        <RoundVerificationSheet
-          course={course}
-          onClose={() => {
-            setVerifyOpen(false);
-            setIntent(undefined);
-          }}
-          onVerified={(method) => {
-            verify(method);
-            setVerifyOpen(false);
-            if (intent) setProduct(intent);
-            setIntent(undefined);
-          }}
-        />
+        <OverlayErrorBoundary
+          key={`verification-${course.id}`}
+          label="round verification"
+          onRetry={() => setVerifyOpen(true)}
+        >
+          <RoundVerificationSheet
+            course={course}
+            returnFocus={returnFocus}
+            onClose={() => {
+              setVerifyOpen(false);
+              setIntentProductId(null);
+            }}
+            onVerified={(method) => {
+              verify(method);
+              setVerifyOpen(false);
+              if (intentProductId) setSelectedProductId(intentProductId);
+              setIntentProductId(null);
+            }}
+          />
+        </OverlayErrorBoundary>
       )}
       {changePending && (
         <CourseChangeDialog
@@ -284,26 +355,19 @@ function ProductDetailSheet({
   onClose,
   onRequireRound,
   onAdd,
+  returnFocus,
 }: {
   product: Product;
   active: boolean;
   onClose: () => void;
   onRequireRound: () => void;
   onAdd: (q: number, m: ProductModifierOption[], i: string) => void;
+  returnFocus?: HTMLElement | null;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
   const [quantity, setQuantity] = useState(1);
   const [selected, setSelected] = useState<ProductModifierOption[]>([]);
   const [instructions, setInstructions] = useState('');
   const firstIncompleteRef = useRef<HTMLFieldSetElement>(null);
-  useEffect(() => {
-    const d = ref.current;
-    if (typeof d?.showModal === 'function') d.showModal();
-    else d?.setAttribute('open', '');
-    return () => {
-      if (typeof d?.close === 'function') d.close();
-    };
-  }, []);
   const total =
     (product.priceCents + selected.reduce((n, o) => n + o.priceCents, 0)) *
     quantity;
@@ -332,14 +396,18 @@ function ProductDetailSheet({
     onAdd(quantity, selected, instructions);
   };
   return (
-    <dialog
-      ref={ref}
+    <ModalOverlay
       className="product-sheet"
-      aria-labelledby="product-title"
-      onCancel={onClose}
+      labelledBy="product-title"
       onClose={onClose}
+      returnFocus={returnFocus}
+      dataAttributes={{
+        'data-product-sheet': '',
+        'data-product-id': product.id,
+      }}
     >
       <button
+        type="button"
         className="sheet-close"
         onClick={onClose}
         aria-label="Close product details"
@@ -441,6 +509,7 @@ function ProductDetailSheet({
       <div className="sheet-action">
         {active ? (
           <button
+            type="button"
             className="button"
             aria-disabled={!product.available}
             aria-describedby={addDescriptionIds || undefined}
@@ -449,35 +518,29 @@ function ProductDetailSheet({
             Add · {formatUsd(total)}
           </button>
         ) : (
-          <button className="button" onClick={onRequireRound}>
+          <button type="button" className="button" onClick={onRequireRound}>
             Start round to order
           </button>
         )}
       </div>
-    </dialog>
+    </ModalOverlay>
   );
 }
 function RoundVerificationSheet({
   course,
   onClose,
   onVerified,
+  returnFocus,
 }: {
   course: Course;
   onClose: () => void;
   onVerified: (m: VerificationMethod) => void;
+  returnFocus?: HTMLElement | null;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
   const [method, setMethod] =
     useState<VerificationMethod>('simulated_location');
   const [entry, setEntry] = useState('');
   const [error, setError] = useState('');
-  useEffect(() => {
-    if (typeof ref.current?.showModal === 'function') ref.current.showModal();
-    else ref.current?.setAttribute('open', '');
-    return () => {
-      if (typeof ref.current?.close === 'function') ref.current.close();
-    };
-  }, []);
   const submit = () => {
     if (method === 'simulated_location') {
       if (course.demoLocationResult === 'eligible') onVerified(method);
@@ -496,13 +559,15 @@ function RoundVerificationSheet({
       );
   };
   return (
-    <dialog
-      ref={ref}
+    <ModalOverlay
       className="verification-sheet"
-      aria-labelledby="verify-title"
-      onCancel={onClose}
+      labelledBy="verify-title"
+      onClose={onClose}
+      returnFocus={returnFocus}
+      dataAttributes={{ 'data-verification-sheet': '' }}
     >
       <button
+        type="button"
         className="sheet-close"
         onClick={onClose}
         aria-label="Close round verification"
@@ -593,10 +658,10 @@ function RoundVerificationSheet({
       <p className="error-message" role="status">
         {error}
       </p>
-      <button className="button" onClick={submit}>
+      <button type="button" className="button" onClick={submit}>
         Verify and start round
       </button>
-    </dialog>
+    </ModalOverlay>
   );
 }
 function CourseChangeDialog({
@@ -623,10 +688,10 @@ function CourseChangeDialog({
         belongs to one course.
       </p>
       <div className="button-row">
-        <button className="button secondary" onClick={onKeep}>
+        <button type="button" className="button secondary" onClick={onKeep}>
           Keep current course
         </button>
-        <button className="button" onClick={onChange}>
+        <button type="button" className="button" onClick={onChange}>
           Clear cart and change to {target}
         </button>
       </div>

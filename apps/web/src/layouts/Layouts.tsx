@@ -110,7 +110,7 @@ export function CourseContextBar() {
           : 'Start your round to unlock ordering'}
       </span>
       {context.mode === 'active_round' && (
-        <button className="link-button" onClick={endRound}>
+        <button type="button" className="link-button" onClick={endRound}>
           End round
         </button>
       )}

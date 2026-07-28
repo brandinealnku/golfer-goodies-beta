@@ -56,6 +56,11 @@ it('opens the same product from its image, name, and visible action', async () =
   await user.click(
     await screen.findByAltText('Fairway Club, demonstration item'),
   );
+  expect(
+    document.querySelector(
+      '[data-product-sheet][data-product-id="summit-pines-club-sandwich"]',
+    ),
+  ).toBeVisible();
   expect(screen.getByRole('dialog', { name: 'Fairway Club' })).toBeVisible();
   await user.click(
     screen.getByRole('button', { name: 'Close product details' }),
@@ -67,6 +72,28 @@ it('opens the same product from its image, name, and visible action', async () =
   );
   await user.click(screen.getAllByText(/View details/)[0]);
   expect(screen.getByRole('dialog', { name: 'Fairway Club' })).toBeVisible();
+});
+it('closes the product portal with Escape and backdrop and restores card focus', async () => {
+  const user = userEvent.setup();
+  route('#/course/summit-pines');
+  const opener = await screen.findByRole('button', {
+    name: 'View Fairway Club details',
+  });
+  await user.click(opener);
+  await user.keyboard('{Escape}');
+  expect(
+    screen.queryByRole('dialog', { name: 'Fairway Club' }),
+  ).not.toBeInTheDocument();
+  await new Promise((resolve) => window.setTimeout(resolve, 0));
+  expect(opener).toHaveFocus();
+
+  await user.click(opener);
+  const backdrop = document.querySelector<HTMLElement>('[data-product-sheet]');
+  expect(backdrop).toBeVisible();
+  await user.click(backdrop as HTMLElement);
+  expect(
+    screen.queryByRole('dialog', { name: 'Fairway Club' }),
+  ).not.toBeInTheDocument();
 });
 it('completes the Summit Pines product-to-cart journey with required modifier guidance', async () => {
   const user = userEvent.setup();
@@ -83,6 +110,7 @@ it('completes the Summit Pines product-to-cart journey with required modifier gu
   expect(
     screen.getByRole('dialog', { name: 'Start your round' }),
   ).toBeVisible();
+  expect(document.querySelector('[data-verification-sheet]')).toBeVisible();
   expect(screen.queryByLabelText('Demo course code')).not.toBeInTheDocument();
   await user.click(
     screen.getByRole('button', { name: 'Verify and start round' }),
