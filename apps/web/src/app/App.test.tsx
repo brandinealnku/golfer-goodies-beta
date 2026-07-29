@@ -14,7 +14,7 @@ it('presents consumer discovery without requesting location automatically', () =
   route('#/discover');
   expect(
     screen.getByRole('heading', {
-      name: 'Everything you need, without leaving the course.',
+      name: 'Everything you need on the course—without leaving the game.',
     }),
   ).toBeVisible();
   expect(screen.getByRole('searchbox', { name: /course name/i })).toBeVisible();
@@ -26,11 +26,9 @@ it('presents consumer discovery without requesting location automatically', () =
 it('distinguishes enabled and external courses without leaking products', async () => {
   const user = userEvent.setup();
   route('#/discover');
-  await user.click(
-    screen.getByRole('button', { name: 'Find courses near me' }),
-  );
+  await user.click(screen.getByRole('button', { name: 'Use My Location' }));
   expect(
-    await screen.findByRole('heading', { name: 'Ordering available nearby' }),
+    await screen.findByRole('heading', { name: 'Search results' }),
   ).toBeVisible();
   expect(screen.getAllByText('Ordering available').length).toBeGreaterThan(0);
   expect(
@@ -278,4 +276,74 @@ it('orders and account primary destinations are meaningful', () => {
   route('#/account');
   expect(screen.getByRole('heading', { name: 'Account' })).toBeVisible();
   expect(screen.queryByText(/planned for a future/)).not.toBeInTheDocument();
+});
+it('shows limited safe partner navigation without a course membership', () => {
+  route('#/partner');
+  const nav = screen.getByRole('navigation', {
+    name: 'Course Partner navigation',
+  });
+  expect(nav).toHaveTextContent('Partner Home');
+  expect(nav).toHaveTextContent('Choose Demo Identity');
+  expect(nav).not.toHaveTextContent('Orders');
+  expect(
+    screen.queryByRole('heading', { name: 'Page not found' }),
+  ).not.toBeInTheDocument();
+});
+it('uses authorized course-scoped partner links for an active owner', async () => {
+  localStorage.setItem('gg.identity.v1', 'summit-owner');
+  route('#/partner/course/summit-pines');
+  const nav = await screen.findByRole('navigation', {
+    name: 'Course Partner navigation',
+  });
+  expect(
+    nav.querySelector('a[href="#/partner/course/summit-pines/orders"]'),
+  ).toBeTruthy();
+  expect(nav.querySelector('a[href="#/partner/orders"]')).toBeFalsy();
+  expect(screen.getByRole('heading', { name: 'Summit Pines' })).toBeVisible();
+});
+it('redirects incomplete partner routes safely and rejects unauthorized course access', async () => {
+  localStorage.setItem('gg.identity.v1', 'summit-owner');
+  const view = route('#/partner/products');
+  expect(
+    await screen.findByRole('heading', { name: 'Products' }),
+  ).toBeVisible();
+  expect(window.location.hash).toBe('#/partner/course/summit-pines/products');
+  view.unmount();
+  route('#/partner/course/cedar-bend-muni/orders');
+  expect(
+    await screen.findByRole('heading', { name: 'Course access unavailable' }),
+  ).toBeVisible();
+  expect(
+    screen.queryByRole('heading', { name: 'Page not found' }),
+  ).not.toBeInTheDocument();
+});
+it('does not grant partner access to a platform administrator', async () => {
+  localStorage.setItem('gg.identity.v1', 'platform-admin');
+  route('#/partner/course/summit-pines');
+  expect(
+    await screen.findByRole('heading', { name: 'Course access unavailable' }),
+  ).toBeVisible();
+});
+it('renders the golfer-first landing information architecture', () => {
+  route('#/discover');
+  expect(screen.getByRole('button', { name: 'Find My Course' })).toBeVisible();
+  expect(
+    screen.getByRole('heading', {
+      name: 'Explore participating course storefronts',
+    }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole('heading', {
+      name: 'Turn your course into an on-demand marketplace',
+    }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole('heading', { name: 'Clear about this demonstration' }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole('heading', { name: 'Frequently asked questions' }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole('link', { name: 'Platform Admin Demo' }),
+  ).toHaveAttribute('href', '#/platform');
 });

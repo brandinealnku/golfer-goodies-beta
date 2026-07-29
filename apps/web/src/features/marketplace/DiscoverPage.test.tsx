@@ -16,9 +16,7 @@ describe('location-first discovery', () => {
       </MemoryRouter>,
     );
     expect(get).not.toHaveBeenCalled();
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Find courses near me' }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: 'Use My Location' }));
     await screen.findByText('Summit Pines Resort');
     expect(get).not.toHaveBeenCalled();
     expect(watch).not.toHaveBeenCalled();

@@ -1,4 +1,10 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import {
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
 import { environment } from '../config/environment';
 import { useCourseContext } from '../state/course-context';
 import { useCart } from '../state/cart';
@@ -6,6 +12,11 @@ import { demoCourses } from '../data/demo-data';
 import { formatUsd } from '../utils/format';
 import { useIdentity } from '../auth/IdentityContext';
 import { hasCapability } from '../auth/authorization';
+import {
+  partnerCoursePath,
+  partnerNavigation,
+  type PartnerDestination,
+} from '../routes/partner-routes';
 
 const Icon = ({ children }: { children: string }) => (
   <span aria-hidden="true">{children}</span>
@@ -23,6 +34,10 @@ export function DesktopAppBar() {
         Golfer Goodies
       </NavLink>
       <nav aria-label="Main navigation">
+        <NavLink to="/discover">Find a Course</NavLink>
+        <NavLink to="/discover">How It Works</NavLink>
+        <NavLink to="/partner">For Golf Courses</NavLink>
+        <NavLink to="/demo">Demo Guide</NavLink>
         <NavLink to={course ? `/course/${course.id}` : '/discover'}>
           {course ? 'Course' : 'Discover'}
         </NavLink>
@@ -198,24 +213,24 @@ export function AppShell() {
       <MobileBottomNav />
       <ToastRegion />
       <footer>
+        <nav aria-label="Footer navigation">
+          <NavLink to="/discover">About</NavLink>
+          <NavLink to="/discover">Find a Course</NavLink>
+          <NavLink to="/discover">How It Works</NavLink>
+          <NavLink to="/partner">Course Partner Portal</NavLink>
+          <NavLink to="/partner/join">Start Demo Application</NavLink>
+          <NavLink to="/demo">Demo Guide</NavLink>
+          <NavLink to="/account">Account</NavLink>
+          <NavLink to="/platform">Platform Admin Demo</NavLink>
+          <NavLink to="/demo">Privacy &amp; demo terms</NavLink>
+          <a href="mailto:demo@example.com">Contact placeholder</a>
+        </nav>
         <p>Local demonstration only · No payment will be charged.</p>
       </footer>
     </>
   );
 }
 export const GolferLayout = AppShell;
-const partnerItems = [
-  'Overview',
-  'Orders',
-  'Products',
-  'Inventory',
-  'Storefront',
-  'Fulfillment',
-  'Promotions',
-  'Analytics',
-  'Team',
-  'Settings',
-];
 const platformItems = [
   'Overview',
   'Courses',
@@ -285,15 +300,101 @@ const Workspace = ({
 );
 export const PartnerLayout = () => {
   const { state, memberships } = useIdentity();
-  const courseId =
-    state.status === 'signed_in' ? memberships[0]?.courseId : undefined;
+  const { courseId: routeCourseId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const active =
+    state.status === 'signed_in'
+      ? memberships.filter(
+          (membership) =>
+            membership.status === 'active' &&
+            hasCapability(membership, 'view_partner_portal'),
+        )
+      : [];
+  const courseId = active.some(
+    (membership) => membership.courseId === routeCourseId,
+  )
+    ? routeCourseId
+    : active[0]?.courseId;
+  const course = demoCourses.find((item) => item.id === courseId);
+  const current = location.pathname.split('/').at(-1) ?? '';
+  const destination: PartnerDestination =
+    current === courseId
+      ? ''
+      : partnerNavigation.some((item) => item.destination === current)
+        ? (current as PartnerDestination)
+        : '';
   return (
-    <Workspace
-      portal="Course Partner"
-      items={partnerItems}
-      base="partner"
-      courseId={courseId}
-    />
+    <div className="workspace workspace-partner">
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
+      <header className="workspace-header">
+        <a className="brand" href="#/discover">
+          Golfer Goodies
+        </a>
+        <strong>Course Partner</strong>
+        <DemoIndicator />
+      </header>
+      <aside className="workspace-sidebar">
+        {courseId ? (
+          <>
+            <p>
+              <strong>{course?.name ?? courseId}</strong>
+            </p>
+            {active.length > 1 && (
+              <label>
+                Current course
+                <select
+                  value={courseId}
+                  onChange={(event) =>
+                    navigate(partnerCoursePath(event.target.value, destination))
+                  }
+                >
+                  {active.map((membership) => (
+                    <option
+                      key={membership.courseId}
+                      value={membership.courseId}
+                    >
+                      {demoCourses.find(
+                        (item) => item.id === membership.courseId,
+                      )?.name ?? membership.courseId}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <nav aria-label="Course Partner navigation">
+              {partnerNavigation.map((item) => (
+                <NavLink
+                  key={item.label}
+                  end={!item.destination}
+                  to={partnerCoursePath(courseId, item.destination)}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          </>
+        ) : (
+          <nav aria-label="Course Partner navigation">
+            <NavLink end to="/partner">
+              Partner Home
+            </NavLink>
+            <NavLink to="/partner/join">Join the Platform</NavLink>
+            <NavLink to="/partner/claim">Claim a Course</NavLink>
+            <NavLink to="/account">Choose Demo Identity</NavLink>
+            <NavLink to="/discover">Return to Golfer Marketplace</NavLink>
+          </nav>
+        )}
+        <a href="#/discover" className="workspace-exit">
+          Return to golfer marketplace
+        </a>
+      </aside>
+      <main id="main-content">
+        <Outlet />
+      </main>
+    </div>
   );
 };
 export const PlatformLayout = () => (

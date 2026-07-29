@@ -46,22 +46,28 @@ const Empty = ({ title, text }: { title: string; text: string }) => (
 );
 export function PartnerIndex() {
   const { state, memberships } = useIdentity();
-  return state.status === 'signed_in' && memberships[0] ? (
-    <Navigate to={`/partner/course/${memberships[0].courseId}`} replace />
+  const membership = memberships.find((item) => item.status === 'active');
+  return state.status === 'signed_in' && membership ? (
+    <Navigate to={`/partner/course/${membership.courseId}`} replace />
   ) : (
     <div className="portal-page">
       <Notice />
       <h1>Course Partner portal</h1>
       <p>
-        Choose a fictional course employee identity for a course-scoped
-        workspace, or explore onboarding.
+        Course tools are course-specific. Choose a fictional course employee
+        identity with an active membership, or begin demo onboarding. Demo
+        onboarding submits no real information, and course changes remain in
+        this browser.
       </p>
       <div className="button-row">
         <Link className="button" to="/account">
-          Choose demo identity
+          Choose Demo Identity
         </Link>
         <Link className="button secondary" to="/partner/join">
-          Explore onboarding
+          Explore Course Onboarding
+        </Link>
+        <Link className="button secondary" to="/discover">
+          Return to Golfer Marketplace
         </Link>
       </div>
     </div>
@@ -320,8 +326,13 @@ const partnerCopy: Record<string, [string, string]> = {
     'Review protected course configuration and demo boundaries.',
   ],
 };
-export function PartnerSection() {
-  const { section = 'settings', courseId = 'summit-pines' } = useParams();
+export function PartnerSection({
+  section: explicitSection,
+}: {
+  section?: string;
+}) {
+  const { section: routeSection, courseId = 'summit-pines' } = useParams();
+  const section = explicitSection ?? routeSection ?? 'settings';
   const state = useMarket();
   const [title, text] = partnerCopy[section] ?? [
     'Workspace',

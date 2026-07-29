@@ -58,7 +58,7 @@ test('service worker upgrades old caches and uses network-first navigation', asy
     webFile('vite.config.ts'),
   ]);
 
-  assert.match(serviceWorker, /golfer-goodies-v03-shell-/);
+  assert.match(serviceWorker, /golfer-goodies-v04-landing-shell-/);
   assert.match(serviceWorker, /self\.skipWaiting\(\)/);
   assert.match(serviceWorker, /self\.clients\.claim\(\)/);
   assert.match(serviceWorker, /key\.startsWith\(CACHE_PREFIX\)/);
@@ -67,4 +67,25 @@ test('service worker upgrades old caches and uses network-first navigation', asy
   assert.match(serviceWorker, /'\.\/index\.html'/);
   assert.match(registration, /updateViaCache: 'none'/);
   assert.match(viteConfig, /base: '\.\/'/);
+});
+
+test('landing metadata and manifest remain Pages-compatible', async () => {
+  const [html, manifest, serviceWorker] = await Promise.all([
+    webFile('index.html'),
+    webFile('public/manifest.webmanifest'),
+    webFile('public/service-worker.js'),
+  ]);
+  assert.match(html, /Golfer Goodies \| On-Course Ordering Marketplace/);
+  assert.match(
+    html,
+    /rel="canonical" href="https:\/\/brandinealnku.github.io\/golfer-goodies-beta\/"/,
+  );
+  assert.match(html, /property="og:image"/);
+  assert.match(html, /name="twitter:card"/);
+  assert.doesNotMatch(html, /(?:src|href)="\/(?!\/)/);
+  const parsed = JSON.parse(manifest);
+  assert.equal(parsed.scope, './');
+  assert.equal(parsed.start_url, './#/discover');
+  assert.ok(parsed.icons.every((icon) => icon.src.startsWith('./')));
+  assert.match(serviceWorker, /golfer-goodies-v04-landing-shell-1/);
 });

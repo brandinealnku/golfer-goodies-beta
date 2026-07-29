@@ -20,3 +20,14 @@ Run the root commands in README. Unit coverage includes capability separation, v
 ## Known limitations
 
 Partner catalog editing, rich settings forms, connected order synchronization, real identity enforcement, approvals, documents, payment, messaging, tax, moderation, disputes, reporting exports, and production analytics remain intentionally unavailable. Manual screen-reader testing and a real-device matrix remain necessary.
+
+## Landing and partner-route regression walkthrough
+
+1. At 375×812, 768×1024, and 1440×900, open `#/discover`; confirm one H1, readable hero, one unified finder, five fictional cards, How It Works, partner benefits, three-sided explanation, trust list, native-details FAQ, split CTA, and organized footer without horizontal scrolling. Confirm no location prompt appears until **Use My Location**.
+2. Signed out, as golfer, and as platform admin, open `#/partner`. Confirm only Partner Home, Join, Claim, Choose Demo Identity, and marketplace exit appear and each avoids the global 404.
+3. Choose `summit-owner@example.com` and repeat every course navigation link. Confirm the route begins `#/partner/course/summit-pines/` and headings match. Repeat manager. Confirm `#/partner/products` redirects to the authorized scoped route.
+4. Open an unauthorized course ID, an unknown section, and a malformed incomplete partner route. Expect access/section guidance, never generic 404. A platform admin must not gain Summit access.
+5. Keyboard-check the skip link, current-page state, selector, search form, FAQ, focus indicators, and all essential mobile actions. Native details must open without a trap. Status text must supplement color.
+6. To inspect a fresh service-worker shell, close other tabs, clear site data in browser developer tools, reload, and confirm the v04 cache. GitHub Pages must retain hash routes under `/golfer-goodies-beta/`.
+
+Expected identities include the signed-out state, golfer, Summit owner/manager, Cedar manager, no-course-access user, and distinct platform admin. All behavior remains fictional and browser-local; manual screen-reader, real-device, and multi-membership fixture QA remain recommended.
