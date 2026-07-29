@@ -1,5 +1,5 @@
 import { environment, type AppMode } from '../config/environment';
-import type { CourseMembershipRole } from './authorization';
+import type { CourseMembershipRole, PlatformRole } from './authorization';
 
 export interface AuthenticatedUser {
   uid: string;
@@ -8,6 +8,7 @@ export interface AuthenticatedUser {
   emailVerified: boolean;
   mode: AppMode;
   platformAdmin: boolean;
+  platformRole?: PlatformRole;
 }
 export type IdentityState =
   | { status: 'loading' }
@@ -36,6 +37,11 @@ const demo = (
   platformAdmin: false,
   membership: role ? { courseId, role } : undefined,
 });
+const platformDemo: DemoIdentity = {
+  ...demo('platform-admin', 'Avery Administrator'),
+  platformAdmin: true,
+  platformRole: 'platform_admin',
+};
 export const demoIdentities = [
   demo('demo-golfer', 'Golfer Demo'),
   demo('summit-owner', 'Olivia Owner', 'course_owner'),
@@ -44,6 +50,7 @@ export const demoIdentities = [
   demo('summit-fulfillment', 'Frankie Fulfillment', 'fulfillment_staff'),
   demo('cedar-manager', 'Cameron Manager', 'course_manager', 'cedar-bend-muni'),
   demo('no-course-access', 'No Course Access'),
+  platformDemo,
 ] as const;
 const SESSION_KEY = 'gg.identity.v1';
 export class DemoIdentityProvider implements IdentityProvider {

@@ -22,6 +22,17 @@ import {
   PartnerLayout,
   PlatformLayout,
 } from '../layouts/Layouts';
+import {
+  OnboardingPage,
+  PartnerIndex,
+  PartnerOrders,
+  PartnerOverview,
+  PartnerSection,
+  PlatformDetail,
+  PlatformOverview,
+  PlatformSection,
+  PlatformSettings,
+} from '../features/marketplace-foundation/MarketplacePages';
 const P = ({ title }: { title: string }) => (
   <PlaceholderPage
     title={title}
@@ -76,26 +87,33 @@ export function AppRoutes() {
         ))}
       </Route>
       <Route path="/partner" element={<PartnerLayout />}>
-        <Route index element={<P title="Partner overview" />} />
-        {[
-          ['orders', 'Staff orders'],
-          ['menu', 'Menu management'],
-          ['fulfillment', 'Fulfillment management'],
-          ['promotions', 'Promotions'],
-          ['analytics', 'Analytics'],
-        ].map(([path, title]) => (
-          <Route key={path} path={path} element={<P title={title} />} />
-        ))}
-        <Route path="*" element={<P title="Partner workspace" />} />
+        <Route index element={<PartnerIndex />} />
+        <Route path="join" element={<OnboardingPage />} />
+        <Route path="claim" element={<OnboardingPage />} />
+        <Route path="application/:applicationId" element={<OnboardingPage />} />
+        <Route
+          path="application/:applicationId/setup"
+          element={<OnboardingPage />}
+        />
+        <Route
+          path="application/:applicationId/preview"
+          element={<OnboardingPage />}
+        />
+        <Route path="course/:courseId" element={<PartnerOverview />} />
+        <Route path="course/:courseId/orders" element={<PartnerOrders />} />
+        <Route path="course/:courseId/:section" element={<PartnerSection />} />
       </Route>
       <Route path="/platform" element={<PlatformLayout />}>
-        <Route index element={<P title="Platform overview" />} />
-        <Route path="courses" element={<P title="Platform courses" />} />
+        <Route index element={<PlatformOverview />} />
+        <Route path="settings" element={<PlatformSettings />} />
+        <Route path=":section" element={<PlatformSection />} />
+        <Route path="courses/:courseId" element={<PlatformDetail />} />
         <Route
-          path="applications"
-          element={<P title="Course applications" />}
+          path="applications/:applicationId"
+          element={<PlatformDetail />}
         />
-        <Route path="*" element={<P title="Platform workspace" />} />
+        <Route path="users/:userId" element={<PlatformDetail />} />
+        <Route path="orders/:orderId" element={<PlatformDetail />} />
       </Route>
       <Route
         path="*"

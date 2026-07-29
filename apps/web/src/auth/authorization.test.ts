@@ -63,3 +63,9 @@ describe('course capability matrix', () => {
     ).toBeNull();
   });
 });
+
+it('keeps platform capabilities separate from course membership capabilities', async () => {
+  const { hasPlatformCapability } = await import('./authorization');
+  expect(hasPlatformCapability('platform_admin', 'manage_courses')).toBe(true);
+  expect(hasPlatformCapability('support_agent', 'manage_courses')).toBe(false);
+});

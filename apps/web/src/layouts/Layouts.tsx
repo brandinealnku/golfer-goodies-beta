@@ -204,18 +204,102 @@ export function AppShell() {
   );
 }
 export const GolferLayout = AppShell;
-const Workspace = ({ name }: { name: string }) => (
-  <>
-    <header className="site-header">
+const partnerItems = [
+  'Overview',
+  'Orders',
+  'Products',
+  'Inventory',
+  'Storefront',
+  'Fulfillment',
+  'Promotions',
+  'Analytics',
+  'Team',
+  'Settings',
+];
+const platformItems = [
+  'Overview',
+  'Courses',
+  'Applications',
+  'Users',
+  'Orders',
+  'Payments',
+  'Disputes',
+  'Moderation',
+  'Reports',
+  'Platform Settings',
+  'Audit Log',
+];
+const Workspace = ({
+  portal,
+  items,
+  base,
+  courseId,
+}: {
+  portal: string;
+  items: string[];
+  base: string;
+  courseId?: string;
+}) => (
+  <div className={`workspace workspace-${base}`}>
+    <a className="skip-link" href="#main-content">
+      Skip to main content
+    </a>
+    <header className="workspace-header">
       <a className="brand" href="#/discover">
         Golfer Goodies
       </a>
-      <strong>{name}</strong>
+      <strong>{portal}</strong>
+      <DemoIndicator />
     </header>
+    <aside className="workspace-sidebar">
+      <nav aria-label={`${portal} navigation`}>
+        {items.map((label) => {
+          const segment =
+            label === 'Overview'
+              ? ''
+              : label
+                  .toLowerCase()
+                  .replaceAll(' ', '-')
+                  .replace('platform-', '')
+                  .replace('audit-log', 'audit');
+          const root = courseId ? `/${base}/course/${courseId}` : `/${base}`;
+          return (
+            <NavLink
+              key={label}
+              end={!segment}
+              to={segment ? `${root}/${segment}` : root}
+            >
+              {label}
+            </NavLink>
+          );
+        })}
+      </nav>
+      <a href="#/discover" className="workspace-exit">
+        Return to golfer marketplace
+      </a>
+    </aside>
     <main id="main-content">
       <Outlet />
     </main>
-  </>
+  </div>
 );
-export const PartnerLayout = () => <Workspace name="Partner workspace" />;
-export const PlatformLayout = () => <Workspace name="Platform workspace" />;
+export const PartnerLayout = () => {
+  const { state, memberships } = useIdentity();
+  const courseId =
+    state.status === 'signed_in' ? memberships[0]?.courseId : undefined;
+  return (
+    <Workspace
+      portal="Course Partner"
+      items={partnerItems}
+      base="partner"
+      courseId={courseId}
+    />
+  );
+};
+export const PlatformLayout = () => (
+  <Workspace
+    portal="Platform Administration"
+    items={platformItems}
+    base="platform"
+  />
+);
