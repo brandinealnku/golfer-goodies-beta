@@ -1,5 +1,44 @@
 # Golfer Goodies v0.2
 
+## Three-sided marketplace foundation
+
+Golfer Goodies is a fictional, course-operated marketplace demonstration with three connected experiences:
+
+- **Golfer marketplace:** `#/discover`, contextual `#/course/:courseId`, `#/cart`, `#/checkout`, `#/orders`, `#/order/:orderId`, and `#/account` retain course-first discovery, verify-on-first-Add, one-course cart, no-payment checkout, and local tracking.
+- **Course Partner portal:** `#/partner`, onboarding at `#/partner/join`, application/setup/preview routes, and `#/partner/course/:courseId` routes for Overview, Orders, Products, Inventory, Storefront, Fulfillment, Promotions, Analytics, Team, and Settings. Operational actions are course-scoped browser simulations.
+- **Platform Administration:** `#/platform` plus Courses, Applications, Users, Orders, Payments, Disputes, Moderation, Reports, Platform Settings, and Audit Log routes. Administrator decisions, suspensions, and notes are fictional local simulations with audit records.
+
+The shared typed foundation models storefront profiles and hours, inventory, six fulfillment types, promotions, payment instructions, customer messages, course-scoped orders with captured integer-cent prices, applications, suspensions, and audit records. The repository boundary is documented in [marketplace experience architecture](docs/architecture/MARKETPLACE_EXPERIENCE_FOUNDATION.md); manual journeys are in [three-sided marketplace QA](docs/testing/THREE_SIDED_MARKETPLACE_QA.md).
+
+### Demo identities
+
+Use Account to choose `demo-golfer@example.com`, `summit-owner@example.com`, `summit-manager@example.com`, `summit-catalog@example.com`, `summit-fulfillment@example.com`, `cedar-manager@example.com`, `no-course-access@example.com`, or `platform-admin@example.com`. Course capabilities derive from active per-course memberships. The deterministic platform administrator has a distinct platform role and does not gain course access through that role.
+
+### Demo persistence and limitations
+
+Marketplace foundation state is validated and versioned under `gg.marketplace.foundation.v1`. Corrupt or unsupported state safely recovers to fictional fixtures. **Reset demo marketplace** is available under `#/platform/settings`. All names, courses, applications, users, inventory, sales, and audit activity are fictional. No real application, verification, payment, refund, notification, moderation, analytics, or support action occurs. Connected implementations are unavailable until trusted services exist.
+
+GitHub Pages publishes **demo mode only** using hash routes and relative assets. It never initializes Firebase or production services. Emulator mode remains local-only under `golfer-goodies-local`; no deployment command is part of this work.
+
+### Development and verification
+
+```text
+npm ci
+npm run dev:demo
+npm run firebase:verify
+npm run format:check
+npm run lint
+npm run typecheck
+npm test
+npm run test:pages
+npm run test:rules
+npm run test:emulators
+npm run build
+npx --no-install playwright install chromium
+npm run test:browser
+git diff --check
+```
+
 ## v0.4 Phase 2 account and management slice
 
 The React beta includes an explicit identity boundary, deterministic browser-local demo employees, Firebase Auth emulator sign-in, per-course memberships and capabilities, unverified course-access requests, and a first employee workspace for operations and catalog availability. Authorized published changes flow through the course-scoped marketplace repository to the golfer storefront. Demo changes stay in one browser and can be reset; emulator changes use local Firestore and trusted callable functions; connected accounts remain honestly unavailable until production onboarding is configured.

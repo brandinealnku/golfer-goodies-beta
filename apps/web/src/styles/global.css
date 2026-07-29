@@ -1210,3 +1210,227 @@ select {
     flex-direction: column;
   }
 }
+/* Three-sided marketplace foundation */
+.workspace {
+  min-height: 100vh;
+  background: #f5f7f6;
+}
+.workspace-header {
+  min-height: 4.25rem;
+  padding: 0.8rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #123c31;
+  color: white;
+}
+.workspace-header .brand {
+  color: white;
+}
+.workspace-header .demo-indicator {
+  margin-left: auto;
+}
+.workspace-sidebar {
+  position: fixed;
+  top: 4.25rem;
+  bottom: 0;
+  width: 14rem;
+  padding: 1rem;
+  background: #e7efeb;
+  border-right: 1px solid #c8d8d0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: auto;
+}
+.workspace-platform .workspace-header {
+  background: #18263c;
+}
+.workspace-platform .workspace-sidebar {
+  background: #e9edf4;
+  border-color: #cad3df;
+}
+.workspace-sidebar nav {
+  display: grid;
+  gap: 0.25rem;
+}
+.workspace-sidebar nav a {
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.5rem;
+  color: inherit;
+  text-decoration: none;
+}
+.workspace-sidebar nav a.active {
+  background: white;
+  font-weight: 800;
+  box-shadow: 0 1px 4px #0002;
+}
+.workspace-exit {
+  padding: 0.75rem;
+  font-size: 0.875rem;
+}
+.workspace > main {
+  margin-left: 14rem;
+}
+.portal-page {
+  max-width: 76rem;
+  margin: auto;
+  padding: 2rem;
+}
+.portal-disclosure {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #d2a94f;
+  background: #fff8df;
+  border-radius: 0.65rem;
+}
+.portal-title {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  font-size: 0.75rem;
+}
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.55rem;
+  border-radius: 99rem;
+  background: #e1ebe6;
+  font-weight: 750;
+  text-transform: capitalize;
+}
+.summary-grid,
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 2rem;
+}
+.summary-card,
+.card-grid > article {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 1rem;
+  background: white;
+  border: 1px solid #d8e0dc;
+  border-radius: 0.75rem;
+}
+.summary-card strong {
+  font-size: 1.25rem;
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.filters label {
+  display: grid;
+  gap: 0.35rem;
+}
+.table-wrap {
+  overflow-x: auto;
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid #d8e0dc;
+}
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-wrap caption {
+  text-align: left;
+  padding: 1rem;
+  font-weight: 800;
+}
+.table-wrap th,
+.table-wrap td {
+  text-align: left;
+  padding: 0.75rem;
+  border-top: 1px solid #e1e7e4;
+  vertical-align: top;
+}
+.table-wrap th small {
+  display: block;
+  font-weight: 400;
+  margin-top: 0.25rem;
+}
+.checklist,
+.stepper {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem 1rem 1rem 2rem;
+  background: white;
+  border-radius: 0.75rem;
+}
+.intentional-empty {
+  padding: 2rem;
+  border: 1px dashed #9aaba3;
+  border-radius: 0.75rem;
+  background: white;
+}
+.danger {
+  background: #8b2535;
+  color: white;
+}
+@media (max-width: 760px) {
+  .workspace-sidebar {
+    position: static;
+    width: auto;
+    padding: 0.5rem;
+    overflow-x: auto;
+  }
+  .workspace-sidebar nav {
+    display: flex;
+    min-width: max-content;
+  }
+  .workspace-exit {
+    display: none;
+  }
+  .workspace > main {
+    margin-left: 0;
+  }
+  .portal-page {
+    padding: 1rem;
+  }
+  .portal-disclosure {
+    display: grid;
+  }
+  .portal-title {
+    align-items: center;
+  }
+  .table-wrap table,
+  .table-wrap thead,
+  .table-wrap tbody,
+  .table-wrap tr,
+  .table-wrap th,
+  .table-wrap td {
+    display: block;
+  }
+  .table-wrap thead {
+    position: absolute;
+    clip: rect(0 0 0 0);
+  }
+  .table-wrap tr {
+    padding: 0.75rem;
+    border-top: 1px solid #d8e0dc;
+  }
+  .table-wrap th,
+  .table-wrap td {
+    border: 0;
+    padding: 0.35rem;
+  }
+  .workspace-header {
+    position: static;
+  }
+}
