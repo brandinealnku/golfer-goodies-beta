@@ -154,9 +154,9 @@ class EmulatorIdentityProvider implements IdentityProvider {
 }
 let provider: IdentityProvider;
 export const getIdentityProvider = () =>
-  (provider ??=
-    environment.mode === 'demo'
-      ? new DemoIdentityProvider()
-      : environment.mode === 'emulator'
-        ? new EmulatorIdentityProvider()
-        : new ConnectedIdentityProvider());
+  environment.mode === 'demo'
+    ? new DemoIdentityProvider()
+    : (provider ??=
+        environment.mode === 'emulator'
+          ? new EmulatorIdentityProvider()
+          : new ConnectedIdentityProvider());

@@ -1,8 +1,8 @@
 {
-  "name": "Golfer Goodies",
-  "short_name": "Goodies",
-  "description": "Fictional marketplace demo foundation",
-  "start_url": "./",
+  "name": "Golfer Goodies On-Course Marketplace",
+  "short_name": "Golfer Goodies",
+  "description": "Fictional browser-local demonstration of a course-operated ordering marketplace.",
+  "start_url": "./#/discover",
   "scope": "./",
   "display": "standalone",
   "theme_color": "#082b20",

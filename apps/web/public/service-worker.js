@@ -1,4 +1,4 @@
-const CACHE = 'golfer-goodies-v03-shell-1';
+const CACHE = 'golfer-goodies-v04-landing-shell-1';
 const CACHE_PREFIX = 'golfer-goodies-';
 const SHELL = [
   './',
