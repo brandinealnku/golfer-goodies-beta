@@ -33,3 +33,13 @@ Open `course-operator-demo/index.html` in a browser. The UI requires no build to
 
 ## Six-hour budget / next gate
 This version demonstrates an end-to-end interaction within one browser. Do not build production payments, hosted accounts, staff identity, multi-device synchronization, or additional administration until an operator conversation confirms those needs. The next decision is whether the demo helps secure a golf-course meeting.
+
+## Mobile commerce UX upgrade (October 2026)
+- Category filters: All, Drinks, Food, Snacks, Golf Essentials. Filters use the existing sample product IDs.
+- Larger product visual treatments, one-tap Add, prices and availability.
+- On small screens, a sticky cart bar provides direct access to checkout.
+- Checkout is a short two-stage cart review → pickup/delivery form; delivery requires a hole.
+- A confirmation panel displays the new demonstration order number and a link to the staff queue.
+- Course Setup, simulated order processing and reset remain available.
+
+**QA still required in a browser**: mobile Safari; full order completion; updating fulfillment flags; disabled products; reloading; and the demo reset. The script was syntax checked, not end-to-end browser tested.
