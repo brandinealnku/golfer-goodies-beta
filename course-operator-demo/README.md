@@ -43,3 +43,11 @@ This version demonstrates an end-to-end interaction within one browser. Do not b
 - Course Setup, simulated order processing and reset remain available.
 
 **QA still required in a browser**: mobile Safari; full order completion; updating fulfillment flags; disabled products; reloading; and the demo reset. The script was syntax checked, not end-to-end browser tested.
+
+## Menu research and catalog cleanup — October 2026
+
+- Removed the legacy Product Availability list, which duplicated the searchable Menu Manager. The existing Add a new product form remains for creating products; Menu Manager handles search, price/description edits, category changes and availability.
+- Expanded optional starter presets from 58 to 70, adding 12 generic prepared-food ideas suggested by publicly available menus at Pinehurst and Pebble Beach. New presets are disabled by default. Prices are demonstration placeholders, not the cited courses' prices.
+- Research references: https://www.pinehurst.com/news/the-best-view-in-pinehurst-it-may-be-at-the-nest-our-new-halfway-house/ ; https://www.pebblebeach.com/dining/the-bench/our-menu/ ; https://www.pinehurst.com/dining/station-21/
+- The named venues' clubhouse/restaurant items should not be represented as confirmed on-course delivery items.
+- The repository code passed syntax validation, but end-to-end browser QA remains pending.
